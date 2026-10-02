@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Send Inquiry - EstateSphere</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
+</head>
+
+<body class="bg-light">
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg bg-white shadow-sm sticky-top">
+    <div class="container">
+
+        <a class="navbar-brand fw-bold" href="/">
+            <i class="bi bi-buildings me-2"></i>
+            EstateSphere
+        </a>
+
+        <a href="/properties" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left me-1"></i>
+            Properties
+        </a>
+
+    </div>
+</nav>
+
+
+<!-- Inquiry Form -->
+<section class="py-5">
+
+    <div class="container">
+
+        <div class="row justify-content-center">
+
+            <div class="col-lg-7">
+
+                <div class="card border-0 shadow-sm rounded-4">
+
+                    <div class="card-body p-4 p-md-5">
+
+                        <div class="text-center mb-4">
+
+                            <div class="mb-3">
+                                <i class="bi bi-chat-dots display-4 text-primary"></i>
+                            </div>
+
+                            <h2 class="fw-bold">
+                                Send an Inquiry
+                            </h2>
+
+                            <p class="text-muted">
+                                Interested in this property? Send a message to the owner.
+                            </p>
+
+                        </div>
+
+
+                        <!-- Property Information -->
+                        <div class="alert alert-primary rounded-3">
+
+                            <h5 class="fw-bold mb-2">
+                                {{ property.title }}
+                            </h5>
+
+                            <p class="mb-1">
+                                <i class="bi bi-geo-alt me-1"></i>
+                                {{ property.location }}
+                            </p>
+
+                            <p class="mb-0">
+                                <i class="bi bi-currency-rupee me-1"></i>
+                                ₹{{ "{:,.0f}".format(property.price) }}
+                            </p>
+
+                        </div>
+
+
+                        <!-- Inquiry Form -->
+                        <form method="POST">
+
+                            <div class="mb-4">
+
+                                <label class="form-label fw-semibold">
+                                    Your Message
+                                </label>
+
+                                <textarea
+                                    name="message"
+                                    class="form-control"
+                                    rows="6"
+                                    placeholder="Write your inquiry here..."
+                                    required
+                                ></textarea>
+
+                            </div>
+
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary btn-lg w-100"
+                            >
+                                <i class="bi bi-send me-2"></i>
+                                Send Inquiry
+                            </button>
+
+                        </form>
+
+
+                        <div class="text-center mt-4">
+
+                            <a
+                                href="/property/{{ property.id }}"
+                                class="text-decoration-none"
+                            >
+                                <i class="bi bi-arrow-left me-1"></i>
+                                Back to Property Details
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- Footer -->
+<footer class="bg-dark text-white py-4 mt-5">
+
+    <div class="container text-center">
+
+        <p class="mb-0">
+            © 2026 EstateSphere. All rights reserved.
+        </p>
+
+    </div>
+
+</footer>
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+
+</body>
+</html>

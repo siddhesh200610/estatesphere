@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Property - EstateSphere</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg bg-white shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/">
+            <i class="bi bi-buildings me-2"></i>EstateSphere
+        </a>
+        <a href="/properties" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Properties
+        </a>
+    </div>
+</nav>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow rounded-4">
+                <div class="card-body p-4 p-md-5">
+
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold">Edit Property</h2>
+                        <p class="text-muted">Update details or add new images for your property</p>
+                    </div>
+
+                    <!-- multipart/form-data add kiya gaya hai file upload ke liye -->
+                    <form method="POST" action="/edit-property/{{ property.id }}" enctype="multipart/form-data">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Property Title</label>
+                            <input type="text" name="title" class="form-control" value="{{ property.title }}" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Property Type</label>
+                                <select name="property_type" class="form-select" required>
+                                    <option value="Apartment" {% if property.property_type == 'Apartment' %}selected{% endif %}>Apartment</option>
+                                    <option value="House" {% if property.property_type == 'House' %}selected{% endif %}>House</option>
+                                    <option value="Villa" {% if property.property_type == 'Villa' %}selected{% endif %}>Villa</option>
+                                    <option value="Plot" {% if property.property_type == 'Plot' %}selected{% endif %}>Plot</option>
+                                    <option value="Commercial" {% if property.property_type == 'Commercial' %}selected{% endif %}>Commercial</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Listing Type</label>
+                                <select name="listing_type" class="form-select" required>
+                                    <option value="buy" {% if property.listing_type == 'buy' %}selected{% endif %}>For Buy</option>
+                                    <option value="rent" {% if property.listing_type == 'rent' %}selected{% endif %}>For Rent</option>
+                                    <option value="sell" {% if property.listing_type == 'sell' %}selected{% endif %}>For Sale</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Price</label>
+                                <input type="number" name="price" class="form-control" value="{{ property.price }}" min="1" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Area (sq. ft.)</label>
+                                <input type="number" name="area" class="form-control" value="{{ property.area }}" min="1" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Location</label>
+                            <input type="text" name="location" class="form-control" value="{{ property.location }}" required>
+                        </div>
+
+                        <!-- Current Images Display -->
+                        {% set img_list = property.image.split(',') if property.image else [] %}
+                        {% if img_list and img_list[0] %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold d-block">Current Images</label>
+                            <div class="d-flex gap-2 overflow-auto py-2">
+                                {% for img in img_list %}
+                                    <img src="{{ img if img.startswith('http') or img.startswith('/') else '/' + img }}" 
+                                         alt="Current Image" 
+                                         class="rounded border" 
+                                         style="width: 80px; height: 60px; object-fit: cover;">
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Upload New Images Field -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Upload New Images (Multiple Select)</label>
+                            <input type="file" name="images" class="form-control" accept="image/*" multiple>
+                            <small class="text-muted">Nayi photos select karne par purani photos replace ho jayengi.</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Description</label>
+                            <textarea name="description" class="form-control" rows="5">{{ property.description }}</textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-check-circle me-2"></i>Update Property
+                        </button>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

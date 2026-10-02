@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Properties - EstateSphere</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="font-sans antialiased text-slate-800 bg-slate-50 flex flex-col min-h-screen">
+
+    <!-- Header / Navigation -->
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-2 text-xl font-bold text-brand-600 tracking-tight hover:opacity-90 transition">
+                <div class="w-9 h-9 rounded-xl bg-brand-600 text-white flex items-center justify-center shadow-md shadow-brand-500/20">
+                    <i class="bi bi-buildings text-lg"></i>
+                </div>
+                <span>EstateSphere</span>
+            </a>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <a href="/" class="px-3.5 py-2 text-sm font-medium text-slate-700 hover:text-brand-600 hover:bg-slate-100/80 rounded-lg transition duration-200 flex items-center gap-1.5">
+                    <i class="bi bi-house"></i>
+                    <span class="hidden sm:inline">Home</span>
+                </a>
+
+                {% if session.get("user_id") %}
+                <a href="{{ url_for('wishlist') }}" class="px-3.5 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 rounded-lg transition duration-200 flex items-center gap-1.5">
+                    <i class="bi bi-heart-fill"></i>
+                    <span class="hidden sm:inline">Wishlist</span>
+                </a>
+                {% endif %}
+
+                <a href="/add-property" class="px-4 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-lg shadow-sm hover:shadow transition duration-200 flex items-center gap-1.5">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Add Property</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        <!-- Page Hero Header -->
+        <section class="bg-white border-b border-slate-200/80 py-10 sm:py-12">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                    Explore Properties
+                </h1>
+                <p class="mt-2 text-base text-slate-600 max-w-xl mx-auto">
+                    Find your perfect home or investment opportunity with EstateSphere
+                </p>
+            </div>
+        </section>
+
+        <!-- Filter & Search Section -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
+            <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-200/80 p-5 sm:p-6">
+                
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                        <i class="bi bi-funnel-fill text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 leading-tight">Search & Filter</h2>
+                        <p class="text-xs text-slate-500">Refine properties based on your personal criteria</p>
+                    </div>
+                </div>
+
+                <form method="GET" action="/properties" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4">
+                        
+                        <!-- Search Input -->
+                        <div class="lg:col-span-4">
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                                Search
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input 
+                                    type="text" 
+                                    name="search" 
+                                    value="{{ search }}" 
+                                    placeholder="Search title, location..." 
+                                    class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Property Type -->
+                        <div class="lg:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                                Property Type
+                            </label>
+                            <select name="property_type" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition">
+                                <option value="">All Types</option>
+                                <option value="Apartment" {% if property_type == "Apartment" %}selected{% endif %}>Apartment</option>
+                                <option value="House" {% if property_type == "House" %}selected{% endif %}>House</option>
+                                <option value="Villa" {% if property_type == "Villa" %}selected{% endif %}>Villa</option>
+                                <option value="Plot" {% if property_type == "Plot" %}selected{% endif %}>Plot</option>
+                                <option value="Commercial" {% if property_type == "Commercial" %}selected{% endif %}>Commercial</option>
+                            </select>
+                        </div>
+
+                        <!-- Listing Type -->
+                        <div class="lg:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                                Listing
+                            </label>
+                            <select name="listing_type" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition">
+                                <option value="">Buy / Rent / Sell</option>
+                                <option value="buy" {% if listing_type == "buy" %}selected{% endif %}>Buy</option>
+                                <option value="rent" {% if listing_type == "rent" %}selected{% endif %}>Rent</option>
+                                <option value="sell" {% if listing_type == "sell" %}selected{% endif %}>Sell</option>
+                            </select>
+                        </div>
+
+                        <!-- Min Price -->
+                        <div class="lg:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                                Min Price
+                            </label>
+                            <input 
+                                type="number" 
+                                name="min_price" 
+                                value="{{ min_price }}" 
+                                placeholder="₹ Minimum" 
+                                min="0" 
+                                class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
+                            >
+                        </div>
+
+                        <!-- Max Price -->
+                        <div class="lg:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                                Max Price
+                            </label>
+                            <input 
+                                type="number" 
+                                name="max_price" 
+                                value="{{ max_price }}" 
+                                placeholder="₹ Maximum" 
+                                min="0" 
+                                class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Filter Actions -->
+                    <div class="flex items-center gap-3 pt-2">
+                        <button type="submit" class="px-5 py-2.5 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-sm transition duration-200 flex items-center gap-2">
+                            <i class="bi bi-search"></i>
+                            <span>Search Properties</span>
+                        </button>
+
+                        <a href="/properties" class="px-5 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition duration-200 flex items-center gap-2">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                            <span>Reset</span>
+                        </a>
+                    </div>
+                </form>
+
+            </div>
+        </section>
+
+        <!-- Property Grid Section -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            
+            <!-- Result Bar -->
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900 tracking-tight">Available Properties</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Showing {{ properties|length }} result(s)</p>
+                </div>
+            </div>
+
+            <!-- Grid Container -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                
+                {% for property in properties %}
+                
+                <article class="group bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-300 flex flex-col overflow-hidden">
+                    
+                    <!-- Media Header -->
+                    <div class="relative h-52 w-full bg-slate-100 overflow-hidden">
+                        {% set img_list = property.image.split(',') if property.image else [] %}
+                        
+                        {% if img_list and img_list[0] %}
+                        <img 
+                            src="{{ img_list[0] if img_list[0].startswith('http') or img_list[0].startswith('/') else '/' + img_list[0] }}" 
+                            alt="{{ property.title }}" 
+                            class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                        >
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center text-slate-300">
+                            <i class="bi bi-house-door text-6xl"></i>
+                        </div>
+                        {% endif %}
+
+                        <!-- Floating Badges -->
+                        <div class="absolute top-3 left-3 right-3 flex justify-between items-center pointer-events-none">
+                            <span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white/90 backdrop-blur-md text-brand-700 shadow-sm border border-white/20">
+                                {{ property.listing_type|capitalize }}
+                            </span>
+                            <span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-500/90 backdrop-blur-md text-white shadow-sm">
+                                {{ property.status|capitalize }}
+                            </span>
+                        </div>
+
+                        <!-- Wishlist Toggle Button (Top-Right) -> Fixed here -->
+                        {% if session.get("user_id") %}
+                        <form action="{{ url_for('add_wishlist', property_id=property.id) }}" method="POST" class="absolute bottom-3 right-3 z-10">
+                            <button type="submit" class="w-9 h-9 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-md hover:scale-110 transition duration-200 text-rose-500">
+                                <i class="bi {% if property.id in user_wishlist %}bi-heart-fill{% else %}bi-heart{% endif %} text-base"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+
+                    <!-- Details Body -->
+                    <div class="p-5 flex-grow flex flex-col justify-between">
+                        <div>
+                            <!-- Price Tag -->
+                            <div class="text-2xl font-extrabold text-brand-600 mb-1">
+                                ₹{{ "{:,.0f}".format(property.price) }}
+                            </div>
+
+                            <!-- Title -->
+                            <h4 class="text-lg font-bold text-slate-900 line-clamp-1 group-hover:text-brand-600 transition">
+                                <a href="/property/{{ property.id }}">
+                                    {{ property.title }}
+                                </a>
+                            </h4>
+
+                            <!-- Attributes List -->
+                            <div class="mt-3 space-y-1.5 text-xs font-medium text-slate-500">
+                                <div class="flex items-center gap-2">
+                                    <i class="bi bi-geo-alt text-slate-400"></i>
+                                    <span class="truncate">{{ property.location }}</span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span class="flex items-center gap-1.5">
+                                        <i class="bi bi-buildings text-slate-400"></i>
+                                        {{ property.property_type }}
+                                    </span>
+                                    <span class="flex items-center gap-1.5">
+                                        <i class="bi bi-arrows-angle-expand text-slate-400"></i>
+                                        {{ property.area }} sq. ft.
+                                    </span>
+                                </div>
+                            </div>
+
+                            {% if property.description %}
+                            <p class="mt-3 text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                                {{ property.description }}
+                            </p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Action Controls -->
+                        <div class="mt-5 pt-4 border-t border-slate-100 space-y-2">
+                            <a href="/property/{{ property.id }}" class="w-full py-2.5 px-4 text-center text-xs font-semibold text-brand-600 bg-brand-50 hover:bg-brand-100 rounded-xl transition duration-200 flex items-center justify-center gap-1.5">
+                                <i class="bi bi-eye"></i>
+                                <span>View Details</span>
+                            </a>
+
+                            {% if session.get("user_id") == property.owner_id and session.get("user_role") == "owner" %}
+                            <div class="grid grid-cols-2 gap-2 pt-1">
+                                <a href="{{ url_for('edit_property', property_id=property.id) }}" class="py-2 px-3 text-center text-xs font-medium text-slate-700 border border-slate-200 hover:bg-slate-50 rounded-lg transition flex items-center justify-center gap-1">
+                                    <i class="bi bi-pencil-square"></i>
+                                    <span>Edit</span>
+                                </a>
+
+                                <form 
+                                    action="{{ url_for('delete_property', property_id=property.id) }}" 
+                                    method="POST" 
+                                    onsubmit="return confirm('Are you sure you want to delete this property?');"
+                                >
+                                    <button type="submit" class="w-full py-2 px-3 text-center text-xs font-medium text-rose-600 border border-rose-100 hover:bg-rose-50 rounded-lg transition flex items-center justify-center gap-1">
+                                        <i class="bi bi-trash"></i>
+                                        <span>Delete</span>
+                                    </button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                    </div>
+
+                </article>
+
+                {% else %}
+
+                <!-- Empty State -->
+                <div class="col-span-full">
+                    <div class="bg-white rounded-2xl border border-slate-200/80 p-12 text-center max-w-lg mx-auto my-8">
+                        <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="bi bi-house-x text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-1">No Properties Found</h3>
+                        <p class="text-sm text-slate-500 mb-6">
+                            We couldn't find any listings matching your current criteria. Try resetting filters or broadening your search.
+                        </p>
+                        <a href="/properties" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-sm transition">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                            <span>Clear Filters</span>
+                        </a>
+                    </div>
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-8 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm">
+            <p>© 2026 EstateSphere. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ property.title }} - EstateSphere</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Leaflet CSS & JS for OpenStreetMap -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="font-sans antialiased text-slate-800 bg-slate-50 flex flex-col min-h-screen">
+
+    <!-- Header / Navigation -->
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-2 text-xl font-bold text-brand-600 tracking-tight">
+                <div class="w-9 h-9 rounded-xl bg-brand-600 text-white flex items-center justify-center shadow-md shadow-brand-500/20">
+                    <i class="bi bi-buildings text-lg"></i>
+                </div>
+                <span>EstateSphere</span>
+            </a>
+
+            <div class="flex items-center gap-3">
+                <a href="/properties" class="px-3.5 py-2 text-sm font-medium text-slate-700 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition flex items-center gap-1.5">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Back to Properties</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+        <!-- Title & Header Bar -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="px-3 py-1 text-xs font-semibold rounded-lg bg-brand-50 text-brand-700 border border-brand-200">
+                        {{ property.listing_type|capitalize }}
+                    </span>
+                    <span class="px-3 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        {{ property.status|capitalize }}
+                    </span>
+                    <span class="px-3 py-1 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700">
+                        {{ property.property_type }}
+                    </span>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ property.title }}</h1>
+                <p class="text-sm text-slate-500 mt-1 flex items-center gap-1.5">
+                    <i class="bi bi-geo-alt text-slate-400"></i>
+                    <span>{{ property.location }}</span>
+                </p>
+            </div>
+            <div class="text-left md:text-right">
+                <div class="text-3xl font-black text-brand-600">₹{{ "{:,.0f}".format(property.price) }}</div>
+                <p class="text-xs text-slate-400 mt-0.5">{{ property.area }} sq. ft. area</p>
+            </div>
+        </div>
+
+        <!-- Image Gallery / Grid Section -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm mb-8">
+            {% set img_list = property.image.split(',') if property.image else [] %}
+
+            {% if img_list and img_list[0] %}
+            <div class="space-y-4">
+                <!-- Main Featured Image -->
+                <div class="relative h-96 sm:h-[480px] w-full rounded-xl overflow-hidden bg-slate-900">
+                    <img 
+                        id="mainDisplayImage"
+                        src="{{ img_list[0] if img_list[0].startswith('http') or img_list[0].startswith('/') else '/' + img_list[0] }}" 
+                        alt="{{ property.title }}" 
+                        class="w-full h-full object-cover transition-all duration-300"
+                    >
+                </div>
+
+                <!-- Multiple Thumbnails Grid -->
+                {% if img_list|length > 1 %}
+                <div>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Property Gallery ({{ img_list|length }} photos)</h4>
+                    <div class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-thin">
+                        {% for img in img_list %}
+                            {% set img_url = img if img.startswith('http') or img.startswith('/') else '/' + img %}
+                            <button 
+                                type="button"
+                                onclick="changeMainImage('{{ img_url }}')"
+                                class="relative w-24 h-20 rounded-lg overflow-hidden border-2 border-transparent hover:border-brand-500 focus:border-brand-500 shrink-0 transition"
+                            >
+                                <img src="{{ img_url }}" alt="Thumbnail" class="w-full h-full object-cover">
+                            </button>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <!-- Fallback Icon if no image -->
+            <div class="h-80 w-full rounded-xl bg-slate-100 flex flex-col items-center justify-center text-slate-400">
+                <i class="bi bi-house-door text-6xl mb-2"></i>
+                <p class="text-sm font-medium">No Images Available for this Property</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Details & Actions Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Description, Specs & Map -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Overview & Description -->
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">Property Overview</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+                        <div class="p-3.5 bg-slate-50 rounded-xl">
+                            <span class="block text-xs font-medium text-slate-500">Property Type</span>
+                            <span class="block text-sm font-bold text-slate-800 mt-0.5">{{ property.property_type }}</span>
+                        </div>
+                        <div class="p-3.5 bg-slate-50 rounded-xl">
+                            <span class="block text-xs font-medium text-slate-500">Listing Purpose</span>
+                            <span class="block text-sm font-bold text-slate-800 mt-0.5">{{ property.listing_type|capitalize }}</span>
+                        </div>
+                        <div class="p-3.5 bg-slate-50 rounded-xl">
+                            <span class="block text-xs font-medium text-slate-500">Total Area</span>
+                            <span class="block text-sm font-bold text-slate-800 mt-0.5">{{ property.area }} sq. ft.</span>
+                        </div>
+                    </div>
+
+                    <h4 class="text-sm font-bold text-slate-900 mb-2">Description</h4>
+                    <p class="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+                        {{ property.description if property.description else "No additional description provided for this property listing." }}
+                    </p>
+                </div>
+
+                <!-- OpenStreetMap Integration Container -->
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
+                        <i class="bi bi-geo-alt-fill text-brand-600"></i>
+                        <span>Property Location Map</span>
+                    </h3>
+                    <div id="propertyMap" class="w-full h-80 rounded-xl border border-slate-200 overflow-hidden bg-slate-50"></div>
+                </div>
+            </div>
+
+            <!-- Side Action Panel -->
+            <div class="space-y-4">
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4">Property Actions</h3>
+                    
+                    {% if session.get("user_id") %}
+                        <div class="space-y-3">
+                            <!-- Agar logged-in user property ka Owner hai -->
+                            {% if property.owner_id == session.get("user_id") %}
+                                <div class="p-3 bg-brand-50 border border-brand-100 rounded-xl text-center mb-1">
+                                    <p class="text-xs font-bold text-brand-700">Ye aapki apni property listing hai.</p>
+                                </div>
+                                
+                                <!-- Edit Property Button -->
+                                <a href="{{ url_for('edit_property', property_id=property.id) }}" class="w-full py-2.5 px-4 text-center text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition flex items-center justify-center gap-2">
+                                    <i class="bi bi-pencil-square"></i>
+                                    <span>Edit Property</span>
+                                </a>
+
+                                <!-- Delete Property Button -->
+                                <form action="{{ url_for('delete_property', property_id=property.id) }}" method="POST" onsubmit="return confirm('Kya aap sach mein is property ko delete karna chahte hain?');">
+                                    <button type="submit" class="w-full py-2.5 px-4 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition flex items-center justify-center gap-2">
+                                        <i class="bi bi-trash-fill"></i>
+                                        <span>Delete Property</span>
+                                  </button>
+                                </form>
+
+                            {% else %}
+                                <!-- Request to Buy / Rent Modal Trigger Button -->
+                                <button type="button" onclick="openRequestModal()" class="w-full py-2.5 px-4 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-sm transition flex items-center justify-center gap-2">
+                                    <i class="bi bi-house-check-fill"></i>
+                                    <span>Send Property Request</span>
+                                </button>
+
+                                <!-- Wishlist Toggle -->
+                                <form action="{{ url_for('add_wishlist', property_id=property.id) }}" method="POST">
+                                    <button type="submit" class="w-full py-2.5 px-4 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition flex items-center justify-center gap-2">
+                                        <i class="bi bi-heart-fill"></i>
+                                        <span>Add to Wishlist</span>
+                                    </button>
+                                </form>
+
+                                <!-- Inquiry Option -->
+                                <a href="{{ url_for('inquiry', property_id=property.id) }}" class="w-full py-2.5 px-4 text-center text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition flex items-center justify-center gap-2">
+                                    <i class="bi bi-chat-dots-fill"></i>
+                                    <span>Send Inquiry to Owner</span>
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <p class="text-xs text-slate-500 mb-4">Please login to send inquiries or save this property to your wishlist.</p>
+                        <a href="/login" class="w-full py-2.5 px-4 text-center text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-sm transition block">
+                            Login to Connect
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Request Selection Modal -->
+    <div id="requestModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm hidden">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-slate-100 mx-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-bold text-slate-900">Select Request Type</h3>
+                <button type="button" onclick="closeRequestModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="bi bi-x-lg text-lg"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-500 mb-6">Aap is property ke liye kis tarah ki request bhejna chahte hain? Kripya chunein:</p>
+            
+            <form action="{{ url_for('property_request', property_id=property.id) }}" method="POST" class="space-y-4">
+                <div>
+                    <select name="request_type" class="w-full py-2.5 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:border-brand-500 font-medium">
+                        <option value="buy" {% if property.listing_type == 'sale' or property.listing_type == 'buy' %}selected{% endif %}>Request to Buy</option>
+                        <option value="rent" {% if property.listing_type == 'rent' %}selected{% endif %}>Request to Rent</option>
+                    </select>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="closeRequestModal()" class="w-1/2 py-2.5 px-4 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition">
+                        Cancel
+                    </button>
+                    <button type="submit" class="w-1/2 py-2.5 px-4 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-sm transition">
+                        Submit Request
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-8 border-t border-slate-800 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm">
+            <p>© 2026 EstateSphere. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JS Scripts -->
+    <script>
+        // Modal Open/Close Logic
+        function openRequestModal() {
+            document.getElementById('requestModal').classList.remove('hidden');
+        }
+        function closeRequestModal() {
+            document.getElementById('requestModal').classList.add('hidden');
+        }
+
+        // Image Switcher Logic
+        function changeMainImage(imgUrl) {
+            document.getElementById('mainDisplayImage').src = imgUrl;
+        }
+
+        // OpenStreetMap Geocoding and Rendering Script
+        document.addEventListener("DOMContentLoaded", function () {
+            var locationName = "{{ property.location }}";
+
+            fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(locationName))
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data && data.length > 0) {
+                        var lat = data[0].lat;
+                        var lon = data[0].lon;
+
+                        var map = L.map('propertyMap').setView([lat, lon], 14);
+
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            maxZoom: 19,
+                            attribution: '&copy; OpenStreetMap contributors'
+                        }).addTo(map);
+
+                        L.marker([lat, lon]).addTo(map)
+                            .bindPopup('<b>{{ property.title }}</b><br>' + locationName)
+                            .openPopup();
+                    } else {
+                        document.getElementById('propertyMap').innerHTML = 
+                            '<div class="flex items-center justify-center h-full text-slate-400 text-sm">Map location details not found for "' + locationName + '".</div>';
+                    }
+                })
+                .catch(function(error) {
+                    console.error("Map Error:", error);
+                    document.getElementById('propertyMap').innerHTML = 
+                        '<div class="flex items-center justify-center h-full text-slate-400 text-sm">Unable to load interactive map.</div>';
+            });
+        });
+    </script>
+
+</body>
+
+</html>

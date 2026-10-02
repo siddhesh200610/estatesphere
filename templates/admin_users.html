@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Manage Users - EstateSphere</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        rel="stylesheet"
+    >
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+            color: white;
+            border-radius: 20px;
+        }
+
+        .stat-card {
+            border: none;
+            border-radius: 16px;
+            transition: 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .user-card {
+            border: none;
+            border-radius: 16px;
+        }
+
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e7f1ff;
+            color: #0d6efd;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        footer {
+            margin-top: 60px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg bg-white shadow-sm sticky-top">
+    <div class="container">
+
+        <a class="navbar-brand text-primary" href="/admin-dashboard">
+            <i class="bi bi-building me-2"></i>
+            EstateSphere
+        </a>
+
+        <div class="d-flex align-items-center gap-2">
+            <a href="/admin-dashboard" class="btn btn-outline-primary">
+                <i class="bi bi-speedometer2 me-1"></i>
+                Dashboard
+            </a>
+
+            <a href="/logout" class="btn btn-outline-danger">
+                <i class="bi bi-box-arrow-right me-1"></i>
+                Logout
+            </a>
+        </div>
+
+    </div>
+</nav>
+
+
+<!-- Main Content -->
+<div class="container py-5">
+
+    <!-- Page Header -->
+    <div class="page-header p-4 p-md-5 mb-4 shadow-sm">
+
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+
+            <div>
+                <div class="small text-uppercase opacity-75 mb-2">
+                    Administrator Panel
+                </div>
+
+                <h1 class="fw-bold mb-2">
+                    Manage Users
+                </h1>
+
+                <p class="mb-0 opacity-75">
+                    View and manage all registered EstateSphere users.
+                </p>
+            </div>
+
+            <div class="mt-3 mt-md-0">
+                <span class="badge bg-light text-primary fs-6 px-3 py-2">
+                    <i class="bi bi-people-fill me-1"></i>
+                    {{ users|length }} Users
+                </span>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- User Statistics -->
+    <div class="row g-4 mb-4">
+
+        <div class="col-md-4">
+            <div class="card stat-card shadow-sm h-100">
+                <div class="card-body p-4">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+                            <p class="text-muted mb-1">
+                                Total Users
+                            </p>
+
+                            <h2 class="fw-bold mb-0">
+                                {{ users|length }}
+                            </h2>
+                        </div>
+
+                        <div class="avatar">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-md-4">
+            <div class="card stat-card shadow-sm h-100">
+                <div class="card-body p-4">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+                            <p class="text-muted mb-1">
+                                Buyers
+                            </p>
+
+                            <h2 class="fw-bold mb-0">
+                                {{ users|selectattr("role", "equalto", "buyer")|list|length }}
+                            </h2>
+                        </div>
+
+                        <div class="avatar">
+                            <i class="bi bi-person-check-fill"></i>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-md-4">
+            <div class="card stat-card shadow-sm h-100">
+                <div class="card-body p-4">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+                            <p class="text-muted mb-1">
+                                Owners
+                            </p>
+
+                            <h2 class="fw-bold mb-0">
+                                {{ users|selectattr("role", "equalto", "owner")|list|length }}
+                            </h2>
+                        </div>
+
+                        <div class="avatar">
+                            <i class="bi bi-house-check-fill"></i>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- Users Table -->
+    <div class="card user-card shadow-sm">
+
+        <div class="card-body p-0">
+
+            <div class="p-4 border-bottom">
+                <h4 class="fw-bold mb-1">
+                    Registered Users
+                </h4>
+
+                <p class="text-muted mb-0">
+                    Complete list of users registered on EstateSphere.
+                </p>
+            </div>
+
+
+            {% if users %}
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+
+                        <tr>
+                            <th class="px-4">#</th>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Registered On</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for user in users %}
+
+                        <tr>
+
+                            <td class="px-4 fw-semibold">
+                                {{ user.id }}
+                            </td>
+
+
+                            <td>
+
+                                <div class="d-flex align-items-center gap-3">
+
+                                    <div class="avatar">
+                                        {{ user.name[0]|upper }}
+                                    </div>
+
+                                    <div>
+                                        <div class="fw-semibold">
+                                            {{ user.name }}
+                                        </div>
+
+                                        <small class="text-muted">
+                                            User ID: {{ user.id }}
+                                        </small>
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+
+                            <td>
+                                <span class="text-muted">
+                                    {{ user.email }}
+                                </span>
+                            </td>
+
+
+                            <td>
+
+                                {% if user.role == "admin" %}
+
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-shield-lock me-1"></i>
+                                        Administrator
+                                    </span>
+
+                                {% elif user.role == "owner" %}
+
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-house-door me-1"></i>
+                                        Owner / Seller
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-person me-1"></i>
+                                        Buyer / Tenant
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <td>
+                                <span class="text-muted">
+                                    {{ user.created_at }}
+                                </span>
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <!-- Empty State -->
+            <div class="text-center py-5">
+
+                <i class="bi bi-people display-4 text-muted"></i>
+
+                <h4 class="fw-bold mt-3">
+                    No Users Found
+                </h4>
+
+                <p class="text-muted">
+                    There are currently no registered users.
+                </p>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- Footer -->
+<footer class="bg-dark text-white py-4">
+
+    <div class="container text-center">
+
+        <h5 class="fw-bold">
+            <i class="bi bi-building me-2"></i>
+            EstateSphere
+        </h5>
+
+        <p class="text-white-50 mb-2">
+            Property Buying, Selling & Rental Portal
+        </p>
+
+        <small class="text-white-50">
+            © 2026 EstateSphere. All rights reserved.
+        </small>
+
+    </div>
+
+</footer>
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+
+</body>
+</html>
