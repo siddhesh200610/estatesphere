@@ -14,7 +14,7 @@ app = Flask(__name__)
 # Flask Session Secret Key
 app.secret_key = os.getenv("SECRET_KEY", "estatesphere-secret-key")
 
-# # Render ya local environment se URL uthao
+# Render ya local environment se URL uthao
 db_url = os.getenv("DATABASE_URL")
 
 # Agar URL 'mysql://' se shuru hota hai (jaise Aiven/Render ka), toh usme driver add karo
@@ -434,10 +434,15 @@ def properties():
 
 
 # =========================
-# Property Details Page
+# Property Details Page (Login Required)
 # =========================
 @app.route("/property/<int:property_id>")
 def property_details(property_id):
+
+    # Agar user login nahi hai toh login page par bhej dein
+    if not session.get("user_id"):
+        flash("Please login to explore property details!", "warning")
+        return redirect(url_for("login"))
 
     property = db.session.execute(
         text(
@@ -1248,26 +1253,6 @@ def reject_property(id):
     )
     db.session.commit()
     return redirect(url_for("admin_properties"))
-
-
-# =========================
-# Admin Inquiries
-# =========================
-@app.route("/admin-inquiries")
-def admin_inquiries():
-    if not session.get("user_id") or session.get("user_role") != "admin":
-        return redirect(url_for("login"))
-    return render_template("admin_inquiries.html")
-
-
-# =========================
-# 500 Error Handler (Added to track Internal Server Errors)
-# =========================
-@app.errorhandler(500)
-def internal_error(error):
-    print("--- TRACEBACK FOR 500 ERROR ---")
-    traceback.print_exc()
-    return "Internal Server Error - Check Render Logs for details", 500
 
 
 if __name__ == "__main__":
