@@ -565,11 +565,11 @@ def admin_properties():
         """)
     ).fetchall()
 
-    return render_template("admin_properties.html", properties=properties)
+    return render_html if False else render_template("admin_properties.html", properties=properties)
 
 
 # =========================
-# Admin Inquiries Route (Added)
+# Admin Inquiries Route
 # =========================
 @app.route("/admin-inquiries")
 def admin_inquiries():
