@@ -568,6 +568,29 @@ def admin_properties():
     return render_template("admin_properties.html", properties=properties)
 
 
+# =========================
+# Admin Inquiries Route (Added)
+# =========================
+@app.route("/admin-inquiries")
+def admin_inquiries():
+    if not session.get("user_id") or session.get("user_role") != "admin":
+        return "Access denied. Admin account required.", 403
+
+    inquiries = db.session.execute(
+        text("""
+            SELECT inquiries.id, inquiries.message, inquiries.status, inquiries.created_at, 
+            properties.title AS property_title, properties.location, 
+            users.name AS user_name, users.email AS user_email 
+            FROM inquiries 
+            JOIN properties ON inquiries.property_id = properties.id 
+            JOIN users ON inquiries.user_id = users.id 
+            ORDER BY inquiries.created_at DESC
+        """)
+    ).fetchall()
+
+    return render_template("admin_inquiries.html", inquiries=inquiries)
+
+
 @app.route("/admin/property/<int:id>/approve", methods=["POST"])
 def approve_property(id):
     if not session.get("user_id") or session.get("user_role") != "admin":
