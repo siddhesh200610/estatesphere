@@ -613,3 +613,40 @@ def reject_property(id):
 
 if __name__ == "__main__":
     app.run(debug=True)
+@app.route('/seed-properties-now')
+def seed_properties():
+    try:
+        cur = mysql.connection.cursor()
+        # Admin ID nikalte hain
+        cur.execute("SELECT id FROM users WHERE email = 'admin@estatesphere.com'")
+        res = cur.fetchone()
+        
+        if not res:
+            return "Error: Admin user (admin@estatesphere.com) nahi mila!"
+        
+        admin_id = res['id'] if isinstance(res, dict) else res[0]
+        
+        # 10 Properties ki list
+        ps = [
+            ("Palm Grove Villa", "A stunning luxury villa surrounded by palm trees and private pool.", 14500000, "Goa", "villa"),
+            ("Skyline Heights Apartment", "Spacious 3 BHK apartment with breathtaking city skyline views.", 6500000, "Mumbai", "apartment"),
+            ("Blue Sapphire House", "Independent duplex house with a lush green lawn and parking.", 8900000, "Bengaluru", "house"),
+            ("Golden Avenue Plot", "Prime residential corner plot ready for immediate construction.", 4200000, "Pune", "plot"),
+            ("Titanium Business Hub", "Premium commercial showroom space located on the main highway.", 25000000, "Ahmedabad", "commercial"),
+            ("Serenity Woods Villa", "Peaceful eco-friendly gated community villa with modern architecture.", 9500000, "Hyderabad", "villa"),
+            ("Sunshine Luxury House", "Traditional yet modern independent house with vintage finish.", 11500000, "Jaipur", "house"),
+            ("Urban Nest Studio", "Fully furnished compact studio apartment ideal for tech professionals.", 3100000, "Bengaluru", "apartment"),
+            ("Metro Logistics Warehouse", "Large industrial commercial warehouse space with loading docks.", 18000000, "Chennai", "commercial"),
+            ("Pine Valley Land Parcel", "Scenic mountain-view land parcel ideal for a holiday retreat.", 5500000, "Shimla", "plot")
+        ]
+        
+        query = "INSERT INTO properties (title, description, price, location, property_type, user_id) VALUES (%s, %s, %s, %s, %s, %s)"
+        vals = [(p[0], p[1], p[2], p[3], p[4], admin_id) for p in ps]
+        
+        cur.executemany(query, vals)
+        mysql.connection.commit()
+        cur.close()
+        
+        return "SUCCESS! Saari 10 properties successfully add ho gayi hain! Ab aap dashboard check kar sakte hain."
+    except Exception as e:
+        return f"Error aa gaya: {str(e)}"
