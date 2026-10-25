@@ -633,23 +633,20 @@ def seed_properties():
         )
         cur = conn.cursor()
         
-        # Step 1: Ensure user_id and owner_id columns exist
-        for col in ['user_id', 'owner_id']:
-            try:
-                cur.execute(f"ALTER TABLE properties ADD COLUMN {col} INT;")
-                conn.commit()
-            except Exception:
-                pass # Column pehle se hoga toh ignore kar dega
-        
-        # Step 2: Get admin user id
+        # Step 1: Find a valid user or create a dummy admin user so owner_id and user_id are never missing
         admin_id = None
         try:
-            cur.execute("SELECT id FROM users WHERE email = 'admin@estatesphere.com'")
+            cur.execute("SELECT id FROM users LIMIT 1;")
             res = cur.fetchone()
             if res:
                 admin_id = res[0]
+            else:
+                cur.execute("INSERT INTO users (username, email, password_hash) VALUES ('admin', 'admin@estatesphere.com', 'pbkdf2:sha256:600000\$dummy');")
+                conn.commit()
+                admin_id = cur.lastrowid
         except Exception:
-            pass
+            # Agar users table hi na ho ya koi aur issue ho toh fallback ID 1 le lo
+            admin_id = 1
         
         ps = [
             ("Palm Grove Villa", "A stunning luxury villa surrounded by palm trees and private pool.", 14500000, "Goa", "villa"),
@@ -664,12 +661,9 @@ def seed_properties():
             ("Pine Valley Land Parcel", "Scenic mountain-view land parcel ideal for a holiday retreat.", 5500000, "Shimla", "plot")
         ]
         
-        if admin_id:
-            query = "INSERT INTO properties (title, description, price, location, property_type, user_id, owner_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-            vals = [(p[0], p[1], p[2], p[3], p[4], admin_id, admin_id) for p in ps]
-        else:
-            query = "INSERT INTO properties (title, description, price, location, property_type) VALUES (%s, %s, %s, %s, %s)"
-            vals = [(p[0], p[1], p[2], p[3], p[4]) for p in ps]
+        # Explicitly pass user_id and owner_id so 1364 error never occurs
+        query = "INSERT INTO properties (title, description, price, location, property_type, user_id, owner_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        vals = [(p[0], p[1], p[2], p[3], p[4], admin_id, admin_id) for p in ps]
         
         cur.executemany(query, vals)
         conn.commit()
