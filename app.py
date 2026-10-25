@@ -633,15 +633,22 @@ def seed_properties():
         )
         cur = conn.cursor()
         
-        cur.execute("SELECT id FROM users WHERE email = 'admin@estatesphere.com'")
-        res = cur.fetchone()
+        # Step 1: Check/Add user_id column if missing
+        try:
+            cur.execute("ALTER TABLE properties ADD COLUMN user_id INT;")
+            conn.commit()
+        except Exception:
+            pass # Column pehle se hoga toh ignore kar dega
         
-        if not res:
-            cur.close()
-            conn.close()
-            return "Error: Admin user (admin@estatesphere.com) nahi mila!"
-        
-        admin_id = res[0]
+        # Step 2: Get admin user id if table exists
+        admin_id = None
+        try:
+            cur.execute("SELECT id FROM users WHERE email = 'admin@estatesphere.com'")
+            res = cur.fetchone()
+            if res:
+                admin_id = res[0]
+        except Exception:
+            pass
         
         ps = [
             ("Palm Grove Villa", "A stunning luxury villa surrounded by palm trees and private pool.", 14500000, "Goa", "villa"),
@@ -656,8 +663,12 @@ def seed_properties():
             ("Pine Valley Land Parcel", "Scenic mountain-view land parcel ideal for a holiday retreat.", 5500000, "Shimla", "plot")
         ]
         
-        query = "INSERT INTO properties (title, description, price, location, property_type, user_id) VALUES (%s, %s, %s, %s, %s, %s)"
-        vals = [(p[0], p[1], p[2], p[3], p[4], admin_id) for p in ps]
+        if admin_id:
+            query = "INSERT INTO properties (title, description, price, location, property_type, user_id) VALUES (%s, %s, %s, %s, %s, %s)"
+            vals = [(p[0], p[1], p[2], p[3], p[4], admin_id) for p in ps]
+        else:
+            query = "INSERT INTO properties (title, description, price, location, property_type) VALUES (%s, %s, %s, %s, %s)"
+            vals = [(p[0], p[1], p[2], p[3], p[4]) for p in ps]
         
         cur.executemany(query, vals)
         conn.commit()
