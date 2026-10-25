@@ -710,10 +710,11 @@ def fix_status():
             database=u.path[1:], port=u.port, ssl_disabled=False
         )
         cur = conn.cursor()
-        cur.execute("UPDATE properties SET status = 'approved';")
+        # Capital 'Approved' set kar rahe hain taaki agar code me wahi check ho raha ho toh match ho jaye
+        cur.execute("UPDATE properties SET status = 'Approved';")
         conn.commit()
         cur.close()
         conn.close()
-        return "SUCCESS! Saari properties ka status 'approved' ho gaya hai!"
+        return "SUCCESS! Saari properties ka status 'Approved' (Capital) ho gaya hai!"
     except Exception as e:
         return f"Error: {str(e)}"
