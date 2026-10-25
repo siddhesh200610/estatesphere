@@ -677,3 +677,25 @@ def seed_properties():
         return "SUCCESS! Saari 10 properties successfully add ho gayi hain!"
     except Exception as e:
         return f"Error aa gaya: {str(e)}"
+
+@app.route('/debug-db')
+def debug_db():
+    try:
+        db_url = os.getenv("DATABASE_URL")
+        u = up.urlparse(db_url)
+        conn = mysql.connector.connect(
+            host=u.hostname,
+            user=u.username,
+            password=u.password,
+            database=u.path[1:],
+            port=u.port,
+            ssl_disabled=False
+        )
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT * FROM properties;")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        return {"total_properties": len(rows), "data": rows}
+    except Exception as e:
+        return f"Error: {str(e)}"
