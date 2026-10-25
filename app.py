@@ -647,34 +647,33 @@ def seed_properties():
         except Exception:
             pass
         
-        # Format: (title, description, price, location, property_type, listing_type, area, image_url)
+        # Format: (title, description, price, location, property_type, listing_type, area)
         ps = [
-            ("Palm Grove Villa", "A stunning luxury villa surrounded by palm trees and private pool.", 14500000, "Goa", "villa", "Sale", 2500, "https://images.unsplash.com/photo-1613490493576-7fde63acd811"),
-            ("Skyline Heights Apartment", "Spacious 3 BHK apartment with breathtaking city skyline views.", 6500000, "Mumbai", "apartment", "Sale", 1350, "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00"),
-            ("Blue Sapphire House", "Independent duplex house with a lush green lawn and parking.", 8900000, "Bengaluru", "house", "Sale", 1800, "https://images.unsplash.com/photo-1512917774080-9991f1c4c750"),
-            ("Golden Avenue Plot", "Prime residential corner plot ready for immediate construction.", 4200000, "Pune", "plot", "Sale", 2400, "https://images.unsplash.com/photo-1500382017468-9049fed747ef"),
-            ("Titanium Business Hub", "Premium commercial showroom space located on the main highway.", 25000000, "Ahmedabad", "commercial", "Rent", 3000, "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab"),
-            ("Serenity Woods Villa", "Peaceful eco-friendly gated community villa with modern architecture.", 9500000, "Hyderabad", "house", "Sale", 2100, "https://images.unsplash.com/photo-1580587771525-78b9dba3b914"),
-            ("Sunshine Luxury House", "Traditional yet modern independent house with vintage finish.", 11500000, "Jaipur", "house", "Sale", 2200, "https://images.unsplash.com/photo-1600585154340-be6161a56a0c"),
-            ("Urban Nest Studio", "Fully furnished compact studio apartment ideal for tech professionals.", 3100000, "Bengaluru", "apartment", "Rent", 650, "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267"),
-            ("Metro Logistics Warehouse", "Large industrial commercial warehouse space with loading docks.", 18000000, "Chennai", "commercial", "Rent", 5000, "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d"),
-            ("Pine Valley Land Parcel", "Scenic mountain-view land parcel ideal for a holiday retreat.", 5500000, "Shimla", "plot", "Sale", 4000, "https://images.unsplash.com/photo-1507089947368-19c1da9775ae")
+            ("Palm Grove Villa", "A stunning luxury villa surrounded by palm trees and private pool.", 14500000, "Goa", "villa", "Sale", 2500),
+            ("Skyline Heights Apartment", "Spacious 3 BHK apartment with breathtaking city skyline views.", 6500000, "Mumbai", "apartment", "Sale", 1350),
+            ("Blue Sapphire House", "Independent duplex house with a lush green lawn and parking.", 8900000, "Bengaluru", "house", "Sale", 1800),
+            ("Golden Avenue Plot", "Prime residential corner plot ready for immediate construction.", 4200000, "Pune", "plot", "Sale", 2400),
+            ("Titanium Business Hub", "Premium commercial showroom space located on the main highway.", 25000000, "Ahmedabad", "commercial", "Rent", 3000),
+            ("Serenity Woods Villa", "Peaceful eco-friendly gated community villa with modern architecture.", 9500000, "Hyderabad", "house", "Sale", 2100),
+            ("Sunshine Luxury House", "Traditional yet modern independent house with vintage finish.", 11500000, "Jaipur", "house", "Sale", 2200),
+            ("Urban Nest Studio", "Fully furnished compact studio apartment ideal for tech professionals.", 3100000, "Bengaluru", "apartment", "Rent", 650),
+            ("Metro Logistics Warehouse", "Large industrial commercial warehouse space with loading docks.", 18000000, "Chennai", "commercial", "Rent", 5000),
+            ("Pine Valley Land Parcel", "Scenic mountain-view land parcel ideal for a holiday retreat.", 5500000, "Shimla", "plot", "Sale", 4000)
         ]
         
-        # Complete INSERT query covering all schema requirements
         query = """
             INSERT INTO properties 
-            (title, description, price, location, property_type, listing_type, area, image_url, user_id, owner_id) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            (title, description, price, location, property_type, listing_type, area, user_id, owner_id) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         
-        vals = [(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], admin_id, admin_id) for p in ps]
+        vals = [(p[0], p[1], p[2], p[3], p[4], p[5], p[6], admin_id, admin_id) for p in ps]
         
         cur.executemany(query, vals)
         conn.commit()
         cur.close()
         conn.close()
         
-        return "SUCCESS! Saari 10 properties (with images, area, listing type, etc.) successfully add ho gayi hain!"
+        return "SUCCESS! Saari 10 properties successfully add ho gayi hain!"
     except Exception as e:
         return f"Error aa gaya: {str(e)}"
