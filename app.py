@@ -661,9 +661,9 @@ def seed_properties():
             ("Pine Valley Land Parcel", "Scenic mountain-view land parcel ideal for a holiday retreat.", 5500000, "Shimla", "plot")
         ]
         
-        # Explicitly pass user_id and owner_id so 1364 error never occurs
-        query = "INSERT INTO properties (title, description, price, location, property_type, user_id, owner_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-        vals = [(p[0], p[1], p[2], p[3], p[4], admin_id, admin_id) for p in ps]
+        # Added listing_type column and value ('Sale') to prevent 1364 error
+        query = "INSERT INTO properties (title, description, price, location, property_type, listing_type, user_id, owner_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+        vals = [(p[0], p[1], p[2], p[3], p[4], 'Sale', admin_id, admin_id) for p in ps]
         
         cur.executemany(query, vals)
         conn.commit()
