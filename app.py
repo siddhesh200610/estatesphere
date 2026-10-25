@@ -35,7 +35,10 @@ db = SQLAlchemy(app)
 # =========================
 @app.route("/")
 def home():
-    return render_template("index.html")
+    properties_list = db.session.execute(
+        text("SELECT * FROM properties WHERE status IN ('approved', 'Approved', 'Available', 'available') ORDER BY created_at DESC LIMIT 6")
+    ).fetchall()
+    return render_template("index.html", properties=properties_list)
 
 
 # =========================
@@ -229,7 +232,7 @@ def properties():
     min_price = request.args.get("min_price", "").strip()
     max_price = request.args.get("max_price", "").strip()
 
-    query = "SELECT * FROM properties WHERE status IN ('approved', 'Available', 'available')"
+    query = "SELECT * FROM properties WHERE status IN ('approved', 'Approved', 'Available', 'available')"
     params = {}
 
     if search:
@@ -565,7 +568,7 @@ def admin_properties():
         """)
     ).fetchall()
 
-    return render_html if False else render_template("admin_properties.html", properties=properties)
+    return render_template("admin_properties.html", properties=properties)
 
 
 # =========================
@@ -633,7 +636,6 @@ def seed_properties():
         )
         cur = conn.cursor()
         
-        # Step 1: Find a valid user or create a dummy admin user so owner_id and user_id are never missing
         admin_id = 1
         try:
             cur.execute("SELECT id FROM users LIMIT 1;")
@@ -647,7 +649,6 @@ def seed_properties():
         except Exception:
             pass
         
-        # Format: (title, description, price, location, property_type, listing_type, area)
         ps = [
             ("Palm Grove Villa", "A stunning luxury villa surrounded by palm trees and private pool.", 14500000, "Goa", "villa", "Sale", 2500),
             ("Skyline Heights Apartment", "Spacious 3 BHK apartment with breathtaking city skyline views.", 6500000, "Mumbai", "apartment", "Sale", 1350),
@@ -663,8 +664,8 @@ def seed_properties():
         
         query = """
             INSERT INTO properties 
-            (title, description, price, location, property_type, listing_type, area, user_id, owner_id) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            (title, description, price, location, property_type, listing_type, area, user_id, owner_id, status) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'approved')
         """
         
         vals = [(p[0], p[1], p[2], p[3], p[4], p[5], p[6], admin_id, admin_id) for p in ps]
@@ -710,11 +711,10 @@ def fix_status():
             database=u.path[1:], port=u.port, ssl_disabled=False
         )
         cur = conn.cursor()
-        # Capital 'Approved' set kar rahe hain taaki agar code me wahi check ho raha ho toh match ho jaye
-        cur.execute("UPDATE properties SET status = 'Approved';")
+        cur.execute("UPDATE properties SET status = 'approved';")
         conn.commit()
         cur.close()
         conn.close()
-        return "SUCCESS! Saari properties ka status 'Approved' (Capital) ho gaya hai!"
+        return "SUCCESS! Saari properties ka status 'approved' ho gaya hai!"
     except Exception as e:
         return f"Error: {str(e)}"
