@@ -633,14 +633,15 @@ def seed_properties():
         )
         cur = conn.cursor()
         
-        # Step 1: Check/Add user_id column if missing
-        try:
-            cur.execute("ALTER TABLE properties ADD COLUMN user_id INT;")
-            conn.commit()
-        except Exception:
-            pass # Column pehle se hoga toh ignore kar dega
+        # Step 1: Ensure user_id and owner_id columns exist
+        for col in ['user_id', 'owner_id']:
+            try:
+                cur.execute(f"ALTER TABLE properties ADD COLUMN {col} INT;")
+                conn.commit()
+            except Exception:
+                pass # Column pehle se hoga toh ignore kar dega
         
-        # Step 2: Get admin user id if table exists
+        # Step 2: Get admin user id
         admin_id = None
         try:
             cur.execute("SELECT id FROM users WHERE email = 'admin@estatesphere.com'")
@@ -664,8 +665,8 @@ def seed_properties():
         ]
         
         if admin_id:
-            query = "INSERT INTO properties (title, description, price, location, property_type, user_id) VALUES (%s, %s, %s, %s, %s, %s)"
-            vals = [(p[0], p[1], p[2], p[3], p[4], admin_id) for p in ps]
+            query = "INSERT INTO properties (title, description, price, location, property_type, user_id, owner_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+            vals = [(p[0], p[1], p[2], p[3], p[4], admin_id, admin_id) for p in ps]
         else:
             query = "INSERT INTO properties (title, description, price, location, property_type) VALUES (%s, %s, %s, %s, %s)"
             vals = [(p[0], p[1], p[2], p[3], p[4]) for p in ps]
