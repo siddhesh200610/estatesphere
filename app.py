@@ -699,3 +699,21 @@ def debug_db():
         return {"total_properties": len(rows), "data": rows}
     except Exception as e:
         return f"Error: {str(e)}"
+
+@app.route('/fix-status')
+def fix_status():
+    try:
+        db_url = os.getenv("DATABASE_URL")
+        u = up.urlparse(db_url)
+        conn = mysql.connector.connect(
+            host=u.hostname, user=u.username, password=u.password,
+            database=u.path[1:], port=u.port, ssl_disabled=False
+        )
+        cur = conn.cursor()
+        cur.execute("UPDATE properties SET status = 'approved';")
+        conn.commit()
+        cur.close()
+        conn.close()
+        return "SUCCESS! Saari properties ka status 'approved' ho gaya hai!"
+    except Exception as e:
+        return f"Error: {str(e)}"
