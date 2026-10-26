@@ -47,8 +47,8 @@ def home():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form["email"]
-        password = request.form["password"]
+        email = request.form.get("email", "")
+        password = request.form.get("password", "")
 
         user = db.session.execute(
             text("SELECT * FROM users WHERE email = :email"),
@@ -92,10 +92,10 @@ def logout():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        name = request.form["name"]
-        email = request.form["email"]
-        password = request.form["password"]
-        role = request.form["role"]
+        name = request.form.get("name", "")
+        email = request.form.get("email", "")
+        password = request.form.get("password", "")
+        role = request.form.get("role", "")
 
         hashed_password = generate_password_hash(password)
 
@@ -124,19 +124,19 @@ def add_property():
         if not owner_id:
             return "Please login first."
 
-        title = request.form["title"]
-        property_type = request.form["property_type"]
-        listing_type = request.form["listing_type"]
-        price = request.form["price"]
-        area = request.form["area"]
-        location = request.form["location"]
-        description = request.form["description"]
-        image = request.form["image"]
+        title = request.form.get("title", "")
+        property_type = request.form.get("property_type", "")
+        listing_type = request.form.get("listing_type", "")
+        price = request.form.get("price", 0)
+        area = request.form.get("area", 0)
+        location = request.form.get("location", "")
+        description = request.form.get("description", "")
+        image = request.form.get("image", "")
 
         db.session.execute(
             text("""
                 INSERT INTO properties (owner_id, title, property_type, listing_type, price, area, location, description, image, status)
-                VALUES (:owner_id, :title, :property_type, :listing_type, :price, :area, :location, :description, :image, 'pending')
+                VALUES (:owner_id, :title, :property_type, :listing_type, :price, :area, :location, :description, :image, 'approved')
             """),
             {
                 "owner_id": owner_id, "title": title, "property_type": property_type,
@@ -145,7 +145,7 @@ def add_property():
             }
         )
         db.session.commit()
-        return "Property added successfully! Pending admin approval."
+        return redirect(url_for("properties"))
 
     return render_template("add_property.html")
 
@@ -178,11 +178,16 @@ def edit_property(property_id):
                 WHERE id = :property_id AND owner_id = :owner_id
             """),
             {
-                "title": request.form["title"], "property_type": request.form["property_type"],
-                "listing_type": request.form["listing_type"], "price": request.form["price"],
-                "area": request.form["area"], "location": request.form["location"],
-                "description": request.form["description"], "image": request.form["image"],
-                "property_id": property_id, "owner_id": owner_id
+                "title": request.form.get("title", ""),
+                "property_type": request.form.get("property_type", ""),
+                "listing_type": request.form.get("listing_type", ""),
+                "price": request.form.get("price", 0),
+                "area": request.form.get("area", 0),
+                "location": request.form.get("location", ""),
+                "description": request.form.get("description", ""),
+                "image": request.form.get("image", ""),
+                "property_id": property_id,
+                "owner_id": owner_id
             }
         )
         db.session.commit()
@@ -348,7 +353,7 @@ def inquiry(property_id):
 
         db.session.execute(
             text("INSERT INTO inquiries (property_id, user_id, message) VALUES (:property_id, :user_id, :message)"),
-            {"property_id": property_id, "user_id": user_id, "message": request.form["message"]}
+            {"property_id": property_id, "user_id": user_id, "message": request.form.get("message", "")}
         )
         db.session.commit()
         return "Inquiry sent successfully!"
@@ -399,7 +404,7 @@ def update_inquiry_status(inquiry_id):
     if not session.get("user_id") or session.get("user_role") != "owner":
         return "Access denied. Owner account required.", 403
 
-    status = request.form["status"]
+    status = request.form.get("status", "")
     if status not in ["pending", "contacted", "closed"]:
         return "Invalid inquiry status.", 400
 
