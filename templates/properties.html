@@ -126,13 +126,9 @@
                                 Property Type
                             </label>
                             <select name="property_type" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition">
-                                <option value="">All Types</option>
-                                <option value="Apartment" {% if property_type == "Apartment" %}selected{% endif %}>Apartment</option>
-                                <option value="House" {% if property_type == "House" %}selected{% endif %}>House</option>
-                                <option value="Villa" {% if property_type == "Villa" %}selected{% endif %}>Villa</option>
-                                <option value="Plot" {% if property_type == "Plot" %}selected{% endif %}>Plot</option>
-                                <option value="Commercial" {% if property_type == "Commercial" %}selected{% endif %}>Commercial</option>
-                            </select>
+    <option value="">All Types</option>
+    {% for c in categories %}<option value="{{ c }}" {% if property_type == c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+</select>
                         </div>
 
                         <!-- Listing Type -->

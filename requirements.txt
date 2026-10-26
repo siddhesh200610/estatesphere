@@ -1,7 +1,7 @@
 ﻿Flask
-mysql-connector-python
-gunicorn
-python-dotenv
 Flask-SQLAlchemy
-pymysql
+mysql-connector-python
+PyMySQL
+python-dotenv
+gunicorn
 cryptography
