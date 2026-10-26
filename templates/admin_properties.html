@@ -123,6 +123,7 @@
                             <th>Area</th>
                             <th>Location</th>
                             <th>Status</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
 
@@ -195,27 +196,23 @@
                             </td>
 
                             <td>
+                                {% set s = property.status|lower %}
+                                <span class="badge bg-{{ 'success' if s in ['approved','available'] else 'warning text-dark' if s == 'pending' else 'danger' if s in ['rejected','sold'] else 'secondary' }}">
+                                    {{ property.status|capitalize }}
+                                </span>
+                            </td>
 
-                                {% if property.status == 'available' %}
-
-                                    <span class="badge bg-success">
-                                        Available
-                                    </span>
-
-                                {% elif property.status == 'sold' %}
-
-                                    <span class="badge bg-danger">
-                                        Sold
-                                    </span>
-
-                                {% else %}
-
-                                    <span class="badge bg-secondary">
-                                        Rented
-                                    </span>
-
+                            <td>
+                                {% if property.status|lower != 'approved' %}
+                                <form method="POST" action="/admin/property/{{ property.id }}/approve" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                </form>
                                 {% endif %}
-
+                                {% if property.status|lower != 'rejected' %}
+                                <form method="POST" action="/admin/property/{{ property.id }}/reject" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                                </form>
+                                {% endif %}
                             </td>
 
                         </tr>

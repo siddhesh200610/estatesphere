@@ -242,6 +242,7 @@
                             <th>Email</th>
                             <th>Role</th>
                             <th>Registered On</th>
+                            <th>Action</th>
                         </tr>
 
                     </thead>
@@ -322,6 +323,13 @@
                                 </span>
                             </td>
 
+                            <td>
+                                {% if user.role != 'admin' %}
+                                <form method="POST" action="/admin/user/{{ user.id }}/delete" onsubmit="return confirm('Delete this user and all their data?');">
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                                {% endif %}
+                            </td>
                         </tr>
 
                         {% endfor %}

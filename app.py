@@ -1,5 +1,8 @@
 from dotenv import load_dotenv
 import os
+import uuid
+from functools import wraps
+from werkzeug.utils import secure_filename
 from flask import Flask, render_template, request, session, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
@@ -29,6 +32,68 @@ app.config["SQLALCHEMY_DATABASE_URI"] = db_url or "mysql+mysqlconnector://root@l
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
+
+# Image upload settings
+UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads")
+ALLOWED_EXT = {"png", "jpg", "jpeg", "webp", "gif"}
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB per request
+
+DEFAULT_CATEGORIES = ["Apartment", "House", "Villa", "Plot", "Commercial"]
+
+
+def save_images(files):
+    """Save uploaded image files, return list of '/static/uploads/<name>' paths."""
+    saved = []
+    for f in files:
+        if not f or not f.filename:
+            continue
+        ext = f.filename.rsplit(".", 1)[-1].lower() if "." in f.filename else ""
+        if ext not in ALLOWED_EXT:
+            continue
+        name = f"{uuid.uuid4().hex}_{secure_filename(f.filename)}"
+        f.save(os.path.join(UPLOAD_FOLDER, name))
+        saved.append(f"/static/uploads/{name}")
+    return saved
+
+
+def role_required(*roles):
+    def deco(fn):
+        @wraps(fn)
+        def wrapper(*a, **kw):
+            if not session.get("user_id"):
+                return redirect(url_for("login"))
+            if session.get("user_role") not in roles:
+                return "Access denied.", 403
+            return fn(*a, **kw)
+        return wrapper
+    return deco
+
+
+def ensure_categories_table():
+    db.session.execute(text("""
+        CREATE TABLE IF NOT EXISTS categories (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL UNIQUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """))
+    if db.session.execute(text("SELECT COUNT(*) FROM categories")).scalar() == 0:
+        for c in DEFAULT_CATEGORIES:
+            db.session.execute(text("INSERT INTO categories (name) VALUES (:n)"), {"n": c})
+    db.session.commit()
+
+
+@app.context_processor
+def inject_categories():
+    """Makes `categories` (list of names) available in every template."""
+    try:
+        ensure_categories_table()
+        rows = db.session.execute(text("SELECT name FROM categories ORDER BY name")).fetchall()
+        return {"categories": [r[0] for r in rows]}
+    except Exception:
+        db.session.rollback()
+        return {"categories": DEFAULT_CATEGORIES}
 
 # =========================
 # Home Page
@@ -65,10 +130,9 @@ def login():
                 return redirect(url_for("admin_dashboard"))
             return redirect(url_for("dashboard"))
 
-        return "Invalid email or password"
+        return render_template("login.html", error="Invalid email or password")
 
     return render_template("login.html")
-
 
 # =========================
 # Dashboard & Logout
@@ -95,7 +159,9 @@ def register():
         name = request.form.get("name", "")
         email = request.form.get("email", "")
         password = request.form.get("password", "")
-        role = request.form.get("role", "")
+        role = request.form.get("role", "buyer")
+        if role not in ("buyer", "owner"):
+            role = "buyer"
 
         hashed_password = generate_password_hash(password)
 
@@ -118,36 +184,51 @@ def register():
 # Add Property
 # =========================
 @app.route("/add-property", methods=["GET", "POST"])
+@role_required("owner", "admin")
 def add_property():
     if request.method == "POST":
         owner_id = session.get("user_id")
-        if not owner_id:
-            return "Please login first."
+        images = save_images(request.files.getlist("images"))
+        url_img = request.form.get("image", "").strip()
+        if url_img:
+            images.append(url_img)
 
-        title = request.form.get("title", "")
-        property_type = request.form.get("property_type", "")
-        listing_type = request.form.get("listing_type", "")
-        price = request.form.get("price", 0)
-        area = request.form.get("area", 0)
-        location = request.form.get("location", "")
-        description = request.form.get("description", "")
-        image = request.form.get("image", "")
+        # Owner listings wait for admin approval; admin listings go live directly
+        status = "approved" if session.get("user_role") == "admin" else "pending"
 
         db.session.execute(
             text("""
                 INSERT INTO properties (owner_id, title, property_type, listing_type, price, area, location, description, image, status)
-                VALUES (:owner_id, :title, :property_type, :listing_type, :price, :area, :location, :description, :image, 'approved')
+                VALUES (:owner_id, :title, :property_type, :listing_type, :price, :area, :location, :description, :image, :status)
             """),
             {
-                "owner_id": owner_id, "title": title, "property_type": property_type,
-                "listing_type": listing_type, "price": price, "area": area,
-                "location": location, "description": description, "image": image
+                "owner_id": owner_id,
+                "title": request.form.get("title", "").strip(),
+                "property_type": request.form.get("property_type", ""),
+                "listing_type": request.form.get("listing_type", ""),
+                "price": request.form.get("price", 0) or 0,
+                "area": request.form.get("area", 0) or 0,
+                "location": request.form.get("location", "").strip(),
+                "description": request.form.get("description", ""),
+                "image": ",".join(images),
+                "status": status,
             }
         )
         db.session.commit()
-        return redirect(url_for("properties"))
+        flash("Property submitted. It will be visible after admin approval." if status == "pending" else "Property added.", "success")
+        return redirect(url_for("my_properties") if status == "pending" else url_for("properties"))
 
     return render_template("add_property.html")
+
+
+@app.route("/my-properties")
+@role_required("owner")
+def my_properties():
+    rows = db.session.execute(
+        text("SELECT * FROM properties WHERE owner_id = :o ORDER BY created_at DESC"),
+        {"o": session["user_id"]}
+    ).fetchall()
+    return render_template("my_properties.html", properties=rows)
 
 
 # =========================
@@ -171,6 +252,12 @@ def edit_property(property_id):
         return "Property not found or you do not have permission to edit it.", 404
 
     if request.method == "POST":
+        new_images = save_images(request.files.getlist("images"))
+        url_img = request.form.get("image", "").strip()
+        if url_img:
+            new_images.append(url_img)
+        # keep old images unless new ones were provided
+        image_value = ",".join(new_images) if new_images else (property.image or "")
         db.session.execute(
             text("""
                 UPDATE properties SET title = :title, property_type = :property_type, listing_type = :listing_type, 
@@ -185,7 +272,7 @@ def edit_property(property_id):
                 "area": request.form.get("area", 0),
                 "location": request.form.get("location", ""),
                 "description": request.form.get("description", ""),
-                "image": request.form.get("image", ""),
+                "image": image_value,
                 "property_id": property_id,
                 "owner_id": owner_id
             }
@@ -279,6 +366,10 @@ def property_details(property_id):
     if not property:
         return "Property not found", 404
 
+    if property.status not in ("approved", "Approved", "available", "Available", "sold", "rented"):
+        if session.get("user_role") != "admin" and session.get("user_id") != property.owner_id:
+            return "This listing is not available.", 404
+
     return render_template("property_details.html", property=property)
 
 
@@ -342,6 +433,8 @@ def wishlist():
 # =========================
 @app.route("/inquiry/<int:property_id>", methods=["GET", "POST"])
 def inquiry(property_id):
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
     property = db.session.execute(text("SELECT * FROM properties WHERE id = :property_id"), {"property_id": property_id}).fetchone()
     if not property:
         return "Property not found", 404
@@ -619,127 +712,62 @@ def reject_property(id):
     return redirect(url_for("admin_properties"))
 
 
-import os
-import urllib.parse as up
-import mysql.connector
+# =========================
+# Admin: Users, Categories, Reports
+# =========================
+@app.route("/admin/user/<int:user_id>/delete", methods=["POST"])
+@role_required("admin")
+def admin_delete_user(user_id):
+    if user_id == session["user_id"]:
+        return "You cannot delete your own admin account.", 400
+    db.session.execute(text("DELETE FROM users WHERE id = :id AND role != 'admin'"), {"id": user_id})
+    db.session.commit()
+    return redirect(url_for("admin_users"))
 
-@app.route('/seed-properties-now')
-def seed_properties():
-    try:
-        db_url = os.getenv("DATABASE_URL")
-        if not db_url:
-            return "Error: DATABASE_URL environment variable nahi mili!"
-        
-        u = up.urlparse(db_url)
-        conn = mysql.connector.connect(
-            host=u.hostname,
-            user=u.username,
-            password=u.password,
-            database=u.path[1:],
-            port=u.port,
-            ssl_disabled=False
-        )
-        cur = conn.cursor()
-        
-        admin_id = 1
-        try:
-            cur.execute("SELECT id FROM users LIMIT 1;")
-            res = cur.fetchone()
-            if res:
-                admin_id = res[0]
-            else:
-                cur.execute("INSERT INTO users (username, email, password_hash) VALUES ('admin', 'admin@estatesphere.com', 'pbkdf2:sha256:600000$dummy');")
-                conn.commit()
-                admin_id = cur.lastrowid
-        except Exception:
-            pass
-        
-        ps = [
-            ("Palm Grove Villa", "A stunning luxury villa surrounded by palm trees and private pool.", 14500000, "Goa", "villa", "Sale", 2500),
-            ("Skyline Heights Apartment", "Spacious 3 BHK apartment with breathtaking city skyline views.", 6500000, "Mumbai", "apartment", "Sale", 1350),
-            ("Blue Sapphire House", "Independent duplex house with a lush green lawn and parking.", 8900000, "Bengaluru", "house", "Sale", 1800),
-            ("Golden Avenue Plot", "Prime residential corner plot ready for immediate construction.", 4200000, "Pune", "plot", "Sale", 2400),
-            ("Titanium Business Hub", "Premium commercial showroom space located on the main highway.", 25000000, "Ahmedabad", "commercial", "Rent", 3000),
-            ("Serenity Woods Villa", "Peaceful eco-friendly gated community villa with modern architecture.", 9500000, "Hyderabad", "house", "Sale", 2100),
-            ("Sunshine Luxury House", "Traditional yet modern independent house with vintage finish.", 11500000, "Jaipur", "house", "Sale", 2200),
-            ("Urban Nest Studio", "Fully furnished compact studio apartment ideal for tech professionals.", 3100000, "Bengaluru", "apartment", "Rent", 650),
-            ("Metro Logistics Warehouse", "Large industrial commercial warehouse space with loading docks.", 18000000, "Chennai", "commercial", "Rent", 5000),
-            ("Pine Valley Land Parcel", "Scenic mountain-view land parcel ideal for a holiday retreat.", 5500000, "Shimla", "plot", "Sale", 4000)
-        ]
-        
-        query = """
-            INSERT INTO properties 
-            (title, description, price, location, property_type, listing_type, area, user_id, owner_id, status) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'approved')
-        """
-        
-        vals = [(p[0], p[1], p[2], p[3], p[4], p[5], p[6], admin_id, admin_id) for p in ps]
-        
-        cur.executemany(query, vals)
-        conn.commit()
-        cur.close()
-        conn.close()
-        
-        return "SUCCESS! Saari 10 properties successfully add ho gayi hain!"
-    except Exception as e:
-        return f"Error aa gaya: {str(e)}"
 
-@app.route('/debug-db')
-def debug_db():
-    try:
-        db_url = os.getenv("DATABASE_URL")
-        u = up.urlparse(db_url)
-        conn = mysql.connector.connect(
-            host=u.hostname,
-            user=u.username,
-            password=u.password,
-            database=u.path[1:],
-            port=u.port,
-            ssl_disabled=False
-        )
-        cur = conn.cursor(dictionary=True)
-        cur.execute("SELECT * FROM properties;")
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-        return {"total_properties": len(rows), "data": rows}
-    except Exception as e:
-        return f"Error: {str(e)}"
+@app.route("/admin-categories", methods=["GET", "POST"])
+@role_required("admin")
+def admin_categories():
+    ensure_categories_table()
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        if name:
+            try:
+                db.session.execute(text("INSERT INTO categories (name) VALUES (:n)"), {"n": name})
+                db.session.commit()
+                flash("Category added.", "success")
+            except Exception:
+                db.session.rollback()
+                flash("Category already exists.", "warning")
+        return redirect(url_for("admin_categories"))
+    rows = db.session.execute(text("SELECT id, name, created_at FROM categories ORDER BY name")).fetchall()
+    return render_template("admin_categories.html", rows=rows)
 
-@app.route('/fix-status')
-def fix_status():
-    try:
-        db_url = os.getenv("DATABASE_URL")
-        u = up.urlparse(db_url)
-        conn = mysql.connector.connect(
-            host=u.hostname, user=u.username, password=u.password,
-            database=u.path[1:], port=u.port, ssl_disabled=False
-        )
-        cur = conn.cursor()
-        cur.execute("UPDATE properties SET status = 'approved';")
-        conn.commit()
-        cur.close()
-        conn.close()
-        return "SUCCESS! Saari properties ka status 'approved' ho gaya hai!"
-    except Exception as e:
-        return f"Error: {str(e)}"
-@app.route('/fix-db-image')
-def fix_db_image():
-    try:
-        db_url = os.getenv("DATABASE_URL")
-        u = up.urlparse(db_url)
-        conn = mysql.connector.connect(
-            host=u.hostname, user=u.username, password=u.password,
-            database=u.path[1:], port=u.port, ssl_disabled=False
-        )
-        cur = conn.cursor()
-        try:
-            cur.execute("ALTER TABLE properties ADD COLUMN image TEXT;")
-            conn.commit()
-        except Exception:
-            pass # Column pehle se hoga toh ignore kar dega
-        cur.close()
-        conn.close()
-        return "SUCCESS! Database mein 'image' column add ho gaya hai!"
-    except Exception as e:
-        return f"Error: {str(e)}"
+
+@app.route("/admin/category/<int:cat_id>/delete", methods=["POST"])
+@role_required("admin")
+def admin_delete_category(cat_id):
+    db.session.execute(text("DELETE FROM categories WHERE id = :id"), {"id": cat_id})
+    db.session.commit()
+    return redirect(url_for("admin_categories"))
+
+
+@app.route("/admin-reports")
+@role_required("admin")
+def admin_reports():
+    q = lambda sql: db.session.execute(text(sql)).fetchall()
+    data = {
+        "users_by_role": q("SELECT role, COUNT(*) FROM users GROUP BY role"),
+        "props_by_status": q("SELECT status, COUNT(*) FROM properties GROUP BY status"),
+        "props_by_listing": q("SELECT listing_type, COUNT(*) FROM properties GROUP BY listing_type"),
+        "props_by_type": q("SELECT property_type, COUNT(*) FROM properties GROUP BY property_type"),
+        "reqs_by_status": q("SELECT status, COUNT(*) FROM property_requests GROUP BY status"),
+        "inq_by_status": q("SELECT status, COUNT(*) FROM inquiries GROUP BY status"),
+        "top_wishlisted": q("""SELECT p.title, COUNT(*) c FROM wishlist w JOIN properties p ON p.id = w.property_id
+                               GROUP BY p.id, p.title ORDER BY c DESC LIMIT 5"""),
+    }
+    return render_template("admin_reports.html", **data)
+
+
+if __name__ == "__main__":
+    app.run(debug=False)

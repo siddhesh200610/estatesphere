@@ -76,5 +76,14 @@ with app.app_context():
         );
     """))
 
+    # 6. Categories Table
+    db.session.execute(text("""
+        CREATE TABLE IF NOT EXISTS categories (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL UNIQUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """))
+
     db.session.commit()
     print("All tables created successfully in Aiven database!")

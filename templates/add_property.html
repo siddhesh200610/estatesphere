@@ -50,54 +50,26 @@
                         </p>
                     </div>
 
-                    <!-- multipart/form-data जोड़ा गया है फाइल अपलोड के लिए -->
                     <form method="POST" action="/add-property" enctype="multipart/form-data">
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">
-                                Property Title
-                            </label>
-
-                            <input
-                                type="text"
-                                name="title"
-                                class="form-control"
-                                placeholder="e.g. 2 BHK Premium Apartment"
-                                required
-                            >
+                            <label class="form-label fw-semibold">Property Title</label>
+                            <input type="text" name="title" class="form-control" placeholder="e.g. 2 BHK Premium Apartment" required>
                         </div>
 
                         <div class="row">
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">
-                                    Property Type
-                                </label>
-
-                                <select
-                                    name="property_type"
-                                    class="form-select"
-                                    required
-                                >
+                                <label class="form-label fw-semibold">Property Type</label>
+                                <select name="property_type" class="form-select" required>
                                     <option value="">Select Type</option>
-                                    <option value="Apartment">Apartment</option>
-                                    <option value="House">House</option>
-                                    <option value="Villa">Villa</option>
-                                    <option value="Plot">Plot</option>
-                                    <option value="Commercial">Commercial</option>
+                                    {% for c in categories %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
                                 </select>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">
-                                    Listing Type
-                                </label>
-
-                                <select
-                                    name="listing_type"
-                                    class="form-select"
-                                    required
-                                >
+                                <label class="form-label fw-semibold">Listing Type</label>
+                                <select name="listing_type" class="form-select" required>
                                     <option value="">Select</option>
                                     <option value="buy">For Buy</option>
                                     <option value="rent">For Rent</option>
@@ -110,100 +82,39 @@
                         <div class="row">
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">
-                                    Price
-                                </label>
-
-                                <input
-                                    type="number"
-                                    name="price"
-                                    class="form-control"
-                                    placeholder="Enter price"
-                                    min="1"
-                                    required
-                                >
+                                <label class="form-label fw-semibold">Price</label>
+                                <input type="number" name="price" class="form-control" placeholder="Enter price" min="1" required>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">
-                                    Area (sq. ft.)
-                                </label>
-
-                                <input
-                                    type="number"
-                                    name="area"
-                                    class="form-control"
-                                    placeholder="e.g. 1200"
-                                    min="1"
-                                    required
-                                >
+                                <label class="form-label fw-semibold">Area (sq. ft.)</label>
+                                <input type="number" name="area" class="form-control" placeholder="e.g. 1200" min="1" required>
                             </div>
 
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">
-                                Location
-                            </label>
-
-                            <input
-                                type="text"
-                                name="location"
-                                class="form-control"
-                                placeholder="e.g. Pune, Maharashtra"
-                                required
-                            >
+                            <label class="form-label fw-semibold">Location</label>
+                            <input type="text" name="location" class="form-control" placeholder="e.g. Pune, Maharashtra" required>
                         </div>
 
-                        <!-- Multiple Image File Upload Field -->
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">
-                                Upload Property Images
-                            </label>
-
-                            <input
-                                type="file"
-                                name="images"
-                                class="form-control"
-                                accept="image/*"
-                                multiple
-                            >
-                            <small class="text-muted">
-                                आप एक साथ कई फोटो (Ctrl/Cmd दबाकर) चुन सकते हैं।
-                            </small>
+                            <label class="form-label fw-semibold">Upload Property Images</label>
+                            <input type="file" name="images" class="form-control" accept="image/*" multiple>
+                            <small class="text-muted">Aap ek saath kai photos (Ctrl dabakar) chun sakte hain.</small>
                         </div>
 
-                        <!-- Optional URL Field (Fallback) -->
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">
-                                Property Image URL (Optional)
-                            </label>
-
-                            <input
-                                type="url"
-                                name="image"
-                                class="form-control"
-                                placeholder="https://example.com/property.jpg (अगर फाइल अपलोड नहीं कर रहे हैं)"
-                            >
+                            <label class="form-label fw-semibold">Property Image URL (Optional)</label>
+                            <input type="url" name="image" class="form-control" placeholder="https://example.com/property.jpg">
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label fw-semibold">
-                                Description
-                            </label>
-
-                            <textarea
-                                name="description"
-                                class="form-control"
-                                rows="5"
-                                placeholder="Describe your property..."
-                            ></textarea>
+                            <label class="form-label fw-semibold">Description</label>
+                            <textarea name="description" class="form-control" rows="5" placeholder="Describe your property..."></textarea>
                         </div>
 
-                        <button
-                            type="submit"
-                            class="btn btn-primary btn-lg w-100"
-                        >
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
                             <i class="bi bi-plus-circle me-2"></i>
                             Add Property
                         </button>
