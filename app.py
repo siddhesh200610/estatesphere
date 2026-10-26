@@ -723,3 +723,23 @@ def fix_status():
         return "SUCCESS! Saari properties ka status 'approved' ho gaya hai!"
     except Exception as e:
         return f"Error: {str(e)}"
+@app.route('/fix-db-image')
+def fix_db_image():
+    try:
+        db_url = os.getenv("DATABASE_URL")
+        u = up.urlparse(db_url)
+        conn = mysql.connector.connect(
+            host=u.hostname, user=u.username, password=u.password,
+            database=u.path[1:], port=u.port, ssl_disabled=False
+        )
+        cur = conn.cursor()
+        try:
+            cur.execute("ALTER TABLE properties ADD COLUMN image TEXT;")
+            conn.commit()
+        except Exception:
+            pass # Column pehle se hoga toh ignore kar dega
+        cur.close()
+        conn.close()
+        return "SUCCESS! Database mein 'image' column add ho gaya hai!"
+    except Exception as e:
+        return f"Error: {str(e)}"
