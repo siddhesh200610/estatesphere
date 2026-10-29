@@ -5,3 +5,4 @@ PyMySQL
 python-dotenv
 gunicorn
 cryptography
+cloudinary

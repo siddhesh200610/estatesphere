@@ -11,6 +11,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # Load environment variables
 load_dotenv()
 
+# CLOUDINARY CHANGE: imports (must come after load_dotenv)
+import cloudinary
+import cloudinary.uploader
+
+USE_CLOUDINARY = bool(os.getenv("CLOUDINARY_URL"))
+
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "estatesphere-secret-key")
 
@@ -73,8 +79,9 @@ def role_home():
     return url_for("dashboard")
 
 
+# CLOUDINARY CHANGE: save_images now uploads to Cloudinary when configured
 def save_images(files):
-    """Save uploaded images and return their static paths."""
+    """Upload images (Cloudinary if configured, else local) and return URLs/paths."""
     saved = []
 
     for file in files:
@@ -89,9 +96,20 @@ def save_images(files):
         if ext not in ALLOWED_EXT:
             continue
 
-        filename = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
-        file.save(os.path.join(UPLOAD_FOLDER, filename))
-        saved.append(f"/static/uploads/{filename}")
+        if USE_CLOUDINARY:
+            try:
+                result = cloudinary.uploader.upload(
+                    file.stream,
+                    folder="estatesphere",
+                    resource_type="image",
+                )
+                saved.append(result["secure_url"])
+            except Exception as error:
+                print(f"Cloudinary upload error: {error}")
+        else:
+            filename = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
+            file.save(os.path.join(UPLOAD_FOLDER, filename))
+            saved.append(f"/static/uploads/{filename}")
 
     return saved
 
