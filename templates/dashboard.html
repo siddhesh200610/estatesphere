@@ -147,8 +147,7 @@
             </h1>
 
             <p class="mb-0 fs-5">
-                Manage your properties, inquiries and EstateSphere activity
-                from your dashboard.
+                {% if session['user_role'] == 'owner' %}Manage your listings, images and the inquiries and requests buyers send you.{% else %}Search properties, save your favourites and send inquiries or buy/rent requests.{% endif %}
             </p>
 
         </div>
@@ -213,6 +212,7 @@
         </div>
 
 
+{% if session['user_role'] == 'owner' %}
         <!-- Add Property -->
 
         <div class="col-md-6 col-lg-4">
@@ -250,6 +250,83 @@
         </div>
 
 
+
+        <!-- My Properties -->
+
+        <div class="col-md-6 col-lg-4">
+
+            <a href="/my-properties" class="quick-link">
+
+                <div class="card dashboard-card shadow-sm h-100 p-3">
+
+                    <div class="card-body">
+
+                        <div class="icon-box mb-4">
+                            <i class="bi bi-building"></i>
+                        </div>
+
+                        <h4 class="fw-bold">
+                            My Properties
+                        </h4>
+
+                        <p class="text-muted">
+                            View, edit or delete your listings and
+                            check their approval status.
+                        </p>
+
+                        <span class="btn btn-primary">
+                            My Properties
+                            <i class="bi bi-arrow-right ms-1"></i>
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+
+
+        <!-- Buyer Requests -->
+
+        <div class="col-md-6 col-lg-4">
+
+            <a href="/owner-requests" class="quick-link">
+
+                <div class="card dashboard-card shadow-sm h-100 p-3">
+
+                    <div class="card-body">
+
+                        <div class="icon-box mb-4">
+                            <i class="bi bi-clipboard-check"></i>
+                        </div>
+
+                        <h4 class="fw-bold">
+                            Buy / Rent Requests
+                        </h4>
+
+                        <p class="text-muted">
+                            Review the buy and rent requests that
+                            buyers sent for your properties.
+                        </p>
+
+                        <span class="btn btn-primary">
+                            View Requests
+                            <i class="bi bi-arrow-right ms-1"></i>
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+{% endif %}
+
+{% if session['user_role'] == 'buyer' %}
         <!-- My Inquiries -->
 
         <div class="col-md-6 col-lg-4">
@@ -285,8 +362,9 @@
             </a>
 
         </div>
+{% endif %}
 
-
+{% if session['user_role'] == 'owner' %}
         <!-- Owner Inquiries -->
 
         <div class="col-md-6 col-lg-4">
@@ -322,8 +400,9 @@
             </a>
 
         </div>
+{% endif %}
 
-
+{% if session['user_role'] == 'buyer' %}
         <!-- Wishlist -->
 
         <div class="col-md-6 col-lg-4">
@@ -359,8 +438,9 @@
             </a>
 
         </div>
+{% endif %}
 
-
+{% if session['user_role'] == 'buyer' %}
         <!-- Property Requests -->
 
         <div class="col-md-6 col-lg-4">
@@ -396,6 +476,7 @@
             </a>
 
         </div>
+{% endif %}
 
     </div>
 
@@ -474,8 +555,6 @@
 <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
 </script>
-{% if session["user_role"] == "owner" %}
-<div class="container pb-5"><a href="/my-properties" class="btn btn-primary"><i class="bi bi-building me-2"></i>My Properties</a></div>
-{% endif %}
+{% include '_flash.html' %}
 </body>
 </html>

@@ -45,20 +45,15 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">Property Type</label>
                                 <select name="property_type" class="form-select" required>
-                                    <option value="Apartment" {% if property.property_type == 'Apartment' %}selected{% endif %}>Apartment</option>
-                                    <option value="House" {% if property.property_type == 'House' %}selected{% endif %}>House</option>
-                                    <option value="Villa" {% if property.property_type == 'Villa' %}selected{% endif %}>Villa</option>
-                                    <option value="Plot" {% if property.property_type == 'Plot' %}selected{% endif %}>Plot</option>
-                                    <option value="Commercial" {% if property.property_type == 'Commercial' %}selected{% endif %}>Commercial</option>
+                                    {% for c in categories %}<option value="{{ c }}" {% if property.property_type|lower == c|lower %}selected{% endif %}>{{ c }}</option>{% endfor %}
                                 </select>
                             </div>
 
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">Listing Type</label>
                                 <select name="listing_type" class="form-select" required>
-                                    <option value="buy" {% if property.listing_type == 'buy' %}selected{% endif %}>For Buy</option>
+                                    <option value="buy" {% if property.listing_type in ['buy','sell','sale'] %}selected{% endif %}>For Sale (Buy)</option>
                                     <option value="rent" {% if property.listing_type == 'rent' %}selected{% endif %}>For Rent</option>
-                                    <option value="sell" {% if property.listing_type == 'sell' %}selected{% endif %}>For Sale</option>
                                 </select>
                             </div>
                         </div>
@@ -85,14 +80,18 @@
                         {% if img_list and img_list[0] %}
                         <div class="mb-3">
                             <label class="form-label fw-semibold d-block">Current Images</label>
-                            <div class="d-flex gap-2 overflow-auto py-2">
+                            <div class="d-flex gap-3 overflow-auto py-2">
                                 {% for img in img_list %}
-                                    <img src="{{ img if img.startswith('http') or img.startswith('/') else '/' + img }}" 
-                                         alt="Current Image" 
-                                         class="rounded border" 
-                                         style="width: 80px; height: 60px; object-fit: cover;">
+                                    <label class="text-center small" style="cursor:pointer">
+                                        <img src="{{ img if img.startswith('http') or img.startswith('/') else '/' + img }}"
+                                             alt="Current Image"
+                                             class="rounded border d-block mb-1"
+                                             style="width: 90px; height: 66px; object-fit: cover;">
+                                        <input type="checkbox" name="remove_images" value="{{ img }}"> Remove
+                                    </label>
                                 {% endfor %}
                             </div>
+                            <small class="text-muted">Tick "Remove" to delete a photo when you save.</small>
                         </div>
                         {% endif %}
 
@@ -100,7 +99,11 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Upload New Images (Multiple Select)</label>
                             <input type="file" name="images" class="form-control" accept="image/*" multiple>
-                            <small class="text-muted">Nayi photos select karne par purani photos replace ho jayengi.</small>
+                            <small class="text-muted">New photos are added to the existing ones.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Or Add Image URL</label>
+                            <input type="url" name="image" class="form-control" placeholder="https://example.com/property.jpg">
                         </div>
 
                         <div class="mb-4">
@@ -120,5 +123,6 @@
     </div>
 </div>
 
+{% include '_flash.html' %}
 </body>
 </html>

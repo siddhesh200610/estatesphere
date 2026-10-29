@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit Property - EstateSphere</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+          rel="stylesheet">
+
+    <style>
+        body {
+            background: #f4f6f9;
+        }
+
+        .edit-card {
+            max-width: 900px;
+            margin: 40px auto;
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 5px 20px rgba(0,0,0,.08);
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #212529, #495057);
+            color: white;
+            padding: 24px;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .property-image {
+            width: 150px;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar bg-white shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-dark"
+           href="{{ url_for('admin_dashboard') }}">
+            <i class="bi bi-buildings"></i> EstateSphere
+        </a>
+
+        <a href="{{ url_for('admin_properties') }}"
+           class="btn btn-outline-dark btn-sm">
+            <i class="bi bi-arrow-left"></i> Back to Properties
+        </a>
+    </div>
+</nav>
+
+<div class="container pb-5">
+
+    <div class="card edit-card">
+
+        <div class="page-header">
+            <h3 class="mb-1">
+                <i class="bi bi-pencil-square"></i> Edit Property
+            </h3>
+            <p class="mb-0">Update property details and images.</p>
+            <small>Property ID: #{{ property.id }}</small>
+        </div>
+
+        <div class="card-body p-4">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endwith %}
+
+            <form method="POST" enctype="multipart/form-data">
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        Property Title *
+                    </label>
+                    <input type="text" name="title" class="form-control"
+                           value="{{ property.title or '' }}" required>
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">
+                            Property Type *
+                        </label>
+                        <select name="property_type" class="form-select" required>
+                            {% set current_type = (property.property_type or '')|lower %}
+                            {% for option in ['apartment', 'house', 'villa', 'plot', 'commercial'] %}
+                                <option value="{{ option }}"
+                                    {% if current_type == option %}selected{% endif %}>
+                                    {{ option|capitalize }}
+                                </option>
+                            {% endfor %}
+                            {% if current_type not in ['apartment', 'house', 'villa', 'plot', 'commercial'] and current_type %}
+                                <option value="{{ property.property_type }}" selected>
+                                    {{ property.property_type }}
+                                </option>
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">
+                            Listing Type *
+                        </label>
+                        <select name="listing_type" class="form-select" required>
+                            {% set current_listing = ((property.listing_type or '')|lower) %}{% if current_listing in ['sell','sale'] %}{% set current_listing = 'buy' %}{% endif %}
+                            {% for option, label in [('buy', 'For Sale (Buy)'), ('rent', 'For Rent')] %}
+                                <option value="{{ option }}"
+                                    {% if current_listing == option %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                            {% if current_listing not in ['buy', 'rent'] and current_listing %}
+                                <option value="{{ property.listing_type }}" selected>
+                                    {{ property.listing_type }}
+                                </option>
+                            {% endif %}
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">
+                            Price (₹) *
+                        </label>
+                        <input type="number" name="price" class="form-control"
+                               min="0" step="0.01"
+                               value="{{ property.price }}" required>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">
+                            Area (sq ft) *
+                        </label>
+                        <input type="number" name="area" class="form-control"
+                               min="0" step="0.01"
+                               value="{{ property.area }}" required>
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Location *</label>
+                    <input type="text" name="location" class="form-control"
+                           value="{{ property.location or '' }}" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Description</label>
+                    <textarea name="description" class="form-control"
+                              rows="4">{{ property.description or '' }}</textarea>
+                </div>
+
+                <hr>
+
+                <h5 class="mb-3">
+                    <i class="bi bi-images"></i> Current Property Images
+                </h5>
+
+                <div class="d-flex flex-wrap gap-3 mb-4">
+                    {% for image_path in existing_images %}
+                        <div>
+                            <img
+                                src="{{ image_path if image_path.startswith('http://') or image_path.startswith('https://') else url_for('static', filename=image_path.replace('static/', '')) }}"
+                                class="property-image"
+                                alt="Property image"
+                                onerror="this.style.display='none'">
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No existing images found.</p>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        Upload New Images
+                    </label>
+                    <input type="file" name="images" class="form-control"
+                           accept="image/*" multiple>
+                    <div class="form-text">
+                        Select new images to replace the existing images.
+                        Leave empty to keep existing images.
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">
+                        Or Add Image URL
+                    </label>
+                    <input type="url" name="image_url" class="form-control"
+                           placeholder="https://example.com/property.jpg">
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Save Changes
+                </button>
+
+                <a href="{{ url_for('admin_properties') }}"
+                   class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<footer class="text-center text-muted py-4">
+    <small>© 2026 EstateSphere. All Rights Reserved.</small>
+</footer>
+
+</body>
+</html>

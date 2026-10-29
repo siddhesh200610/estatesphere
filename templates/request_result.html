@@ -119,10 +119,10 @@
                 </a>
 
                 <a
-                    href="{{ url_for('my_requests') }}"
+                    href="{{ next_url or url_for('my_requests') }}"
                     class="btn btn-outline-secondary btn-custom ms-2"
                 >
-                    My Requests
+                    {{ next_label or 'My Requests' }}
                 </a>
 
             </div>

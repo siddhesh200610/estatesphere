@@ -1,0 +1,336 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EstateSphere | {{ page|default('home')|replace('_',' ')|title }}</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+body{background:#f3f6fb;color:#172033;font-family:system-ui,sans-serif}
+.navbar{background:#173f75}.brand{font-weight:800}
+.hero{background:linear-gradient(120deg,#173f75,#2866ad);color:white;border-radius:20px;padding:26px}
+.panel,.property-card{background:#fff;border:1px solid #e6ebf3;border-radius:16px;box-shadow:0 5px 20px #162b4d0a}
+.panel{padding:22px;margin-bottom:22px}.property-card{height:100%;overflow:hidden}
+.property-card img{height:190px;width:100%;object-fit:cover;background:#e8edf5}
+.property-body{padding:17px}.price{font-weight:800;color:#173f75;font-size:1.15rem}
+.muted{color:#718096}.btn{border-radius:9px}
+.table th{white-space:nowrap;color:#607087;font-size:.82rem;text-transform:uppercase}
+.page-title{font-weight:800}
+</style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark px-3 px-lg-5 py-3">
+<a class="navbar-brand brand" href="{{ url_for('dashboard') if session.get('user_id') else url_for('home') }}">
+<i class="bi bi-buildings me-2"></i>EstateSphere
+</a>
+<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+<span class="navbar-toggler-icon"></span>
+</button>
+<div class="collapse navbar-collapse" id="nav">
+<div class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+<a class="nav-link" href="{{ url_for('properties') }}">Properties</a>
+{% if session.get('user_role') == 'owner' %}
+<a class="nav-link" href="{{ url_for('my_properties') }}">My Properties</a>
+<a class="nav-link" href="{{ url_for('owner_inquiries') }}">Inquiries</a>
+<a class="nav-link" href="{{ url_for('owner_requests') }}">Requests</a>
+{% elif session.get('user_role') == 'buyer' %}
+<a class="nav-link" href="{{ url_for('wishlist') }}">Wishlist</a>
+<a class="nav-link" href="{{ url_for('my_inquiries') }}">My Inquiries</a>
+<a class="nav-link" href="{{ url_for('my_requests') }}">My Requests</a>
+{% elif session.get('user_role') == 'admin' %}
+<a class="nav-link" href="{{ url_for('admin_dashboard') }}">Admin</a>
+<a class="nav-link" href="{{ url_for('admin_properties') }}">Manage Properties</a>
+<a class="nav-link" href="{{ url_for('admin_users') }}">Manage Users</a>
+<a class="nav-link" href="{{ url_for('admin_inquiries') }}">All Inquiries</a>
+<a class="nav-link" href="{{ url_for('admin_categories') }}">Categories</a>
+<a class="nav-link" href="{{ url_for('admin_reports') }}">Reports</a>
+{% endif %}
+{% if session.get('user_id') %}
+<a class="btn btn-light btn-sm ms-lg-2" href="{{ url_for('logout') }}">Logout</a>
+{% else %}
+<a class="btn btn-light btn-sm" href="{{ url_for('login') }}">Login</a>
+<a class="btn btn-warning btn-sm ms-2" href="{{ url_for('register') }}">Register</a>
+{% endif %}
+</div>
+</div>
+</nav>
+
+<main class="container py-4 py-lg-5">
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ 'success' if category == 'success' else ('warning' if category == 'warning' else ('danger' if category == 'danger' else 'info')) }} alert-dismissible fade show">
+{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+{% if page in ['home','listing'] %}
+<section class="hero mb-4">
+<div class="row align-items-center g-3">
+<div class="col-lg-7">
+<div class="text-uppercase small opacity-75 mb-2">EstateSphere Property Portal</div>
+<h1 class="display-6 fw-bold">{{ 'Find Your Perfect Property' if page == 'home' else 'Explore Properties' }}</h1>
+<p class="mb-0">Buy, sell and rent properties easily.</p>
+</div>
+<div class="col-lg-5">
+<form class="row g-2" method="GET" action="{{ url_for('properties') }}">
+<div class="col-12"><input class="form-control form-control-lg" name="search" placeholder="Search title or location" value="{{ search|default('') }}"></div>
+<div class="col-6"><select class="form-select" name="property_type">
+<option value="">All types</option>
+{% for c in categories|default([]) %}
+<option value="{{ c }}" {% if property_type|default('')|lower == c|lower %}selected{% endif %}>{{ c }}</option>
+{% endfor %}
+</select></div>
+<div class="col-6"><select class="form-select" name="listing_type">
+<option value="">Buy / Rent</option>
+<option value="buy" {% if listing_type|default('') in ['buy','sell','sale'] %}selected{% endif %}>Buy / Sale</option>
+<option value="rent" {% if listing_type|default('') == 'rent' %}selected{% endif %}>Rent</option>
+</select></div>
+<div class="col-6"><input class="form-control" type="number" min="0" name="min_price" placeholder="Min price" value="{{ min_price|default('') }}"></div>
+<div class="col-6"><input class="form-control" type="number" min="0" name="max_price" placeholder="Max price" value="{{ max_price|default('') }}"></div>
+<div class="col-12"><button class="btn btn-warning w-100 fw-semibold"><i class="bi bi-search me-1"></i>Search Properties</button></div>
+</form>
+</div>
+</div>
+</section>
+<div class="d-flex justify-content-between align-items-center mb-3">
+<h2 class="h4 page-title">{{ 'Latest Properties' if page == 'home' else 'Search Results' }}</h2>
+<span class="muted">{{ properties|length }} listing(s)</span>
+</div>
+<div class="row g-4">
+{% for p in properties %}
+<div class="col-md-6 col-lg-4">
+<div class="property-card">
+{% set img = (p.image or '').split(',')[0].strip() %}
+{% if img %}
+<img src="{{ img if img.startswith('http') else url_for('static',filename=img.replace('static/','').replace('/static/','').lstrip('/')) }}" alt="Property image">
+{% else %}
+<div class="d-flex align-items-center justify-content-center" style="height:190px;background:#e8edf5"><i class="bi bi-house display-4 text-secondary"></i></div>
+{% endif %}
+<div class="property-body">
+<span class="badge text-bg-light mb-2">{{ p.property_type }}</span>
+<h3 class="h5 fw-bold">{{ p.title }}</h3>
+<div class="muted mb-2"><i class="bi bi-geo-alt me-1"></i>{{ p.location }}</div>
+<div class="price mb-3">₹{{ '{:,.0f}'.format(p.price|float) }} <small class="text-secondary fw-normal">· {{ p.listing_type|title }}</small></div>
+<a class="btn btn-primary w-100" href="{{ url_for('property_details',property_id=p.id) }}">View Details</a>
+</div>
+</div>
+</div>
+{% else %}
+<div class="col-12"><div class="panel text-center py-5">
+<i class="bi bi-house display-5 text-secondary"></i><h3 class="h5 mt-3">No properties found</h3>
+<p class="muted">Try changing your search filters.</p>
+</div></div>
+{% endfor %}
+</div>
+
+{% elif page in ['add_property','edit_property','admin_edit_property'] %}
+{% set editing = page != 'add_property' %}
+<section class="hero mb-4"><h1 class="h2 fw-bold">{{ 'Edit Property' if editing else 'Add a Property' }}</h1><p class="mb-0">Enter accurate property details below.</p></section>
+<div class="panel">
+<form method="POST" enctype="multipart/form-data" action="{% if page == 'add_property' %}{{ url_for('add_property') }}{% elif page == 'admin_edit_property' %}{{ url_for('admin_edit_property',property_id=property.id) }}{% else %}{{ url_for('edit_property',property_id=property.id) }}{% endif %}">
+<div class="row g-3">
+<div class="col-md-8"><label class="form-label">Property Title *</label><input class="form-control" name="title" required value="{{ property.title if editing else '' }}"></div>
+<div class="col-md-4"><label class="form-label">Property Type *</label><select class="form-select" name="property_type" required>
+{% for c in categories|default(['Apartment','House','Villa','Plot']) %}
+<option value="{{ c }}" {% if editing and property.property_type|lower == c|lower %}selected{% endif %}>{{ c }}</option>
+{% endfor %}
+</select></div>
+<div class="col-md-4"><label class="form-label">Listing Type *</label><select class="form-select" name="listing_type" required>
+<option value="buy" {% if editing and property.listing_type in ['buy','sell'] %}selected{% endif %}>Buy / Sale</option>
+<option value="rent" {% if editing and property.listing_type == 'rent' %}selected{% endif %}>Rent</option>
+<option value="sell" {% if editing and property.listing_type == 'sell' %}selected{% endif %}>Sell</option>
+</select></div>
+<div class="col-md-4"><label class="form-label">Price (₹) *</label><input class="form-control" type="number" min="1" step="0.01" name="price" required value="{{ property.price if editing else '' }}"></div>
+<div class="col-md-4"><label class="form-label">Area (sq. ft.) *</label><input class="form-control" type="number" min="1" step="0.01" name="area" required value="{{ property.area if editing else '' }}"></div>
+<div class="col-12"><label class="form-label">Location *</label><input class="form-control" name="location" required value="{{ property.location if editing else '' }}"></div>
+<div class="col-12"><label class="form-label">Description</label><textarea class="form-control" rows="4" name="description">{{ property.description if editing else '' }}</textarea></div>
+<div class="col-md-6"><label class="form-label">Upload images</label><input class="form-control" type="file" name="images" accept="image/*" multiple><small class="text-secondary">JPG, PNG, WEBP or GIF.</small></div>
+<div class="col-md-6"><label class="form-label">Image URL (optional)</label><input class="form-control" name="image" placeholder="https://..." value="{{ property.image if editing and property.image and property.image.startswith('http') else '' }}"></div>
+</div>
+{% if editing and property.image %}
+<div class="mt-3"><label class="form-label">Current image</label><div class="d-flex flex-wrap gap-2">
+{% for current_img in property.image.split(',') %}
+{% if current_img.strip() %}
+<img src="{{ current_img.strip() if current_img.strip().startswith('http') else url_for('static',filename=current_img.strip().replace('static/','').replace('/static/','').lstrip('/')) }}" alt="Current property image" style="width:100px;height:75px;object-fit:cover;border-radius:8px">
+{% endif %}
+{% endfor %}
+</div></div>
+{% endif %}
+<div class="d-flex gap-2 mt-4"><button class="btn btn-primary">{{ 'Save Changes' if editing else 'Submit Property' }}</button><a class="btn btn-outline-secondary" href="{{ url_for('dashboard') }}">Cancel</a></div>
+</form>
+</div>
+
+{% elif page == 'details' %}
+<section class="hero mb-4">
+<span class="badge text-bg-light mb-2">{{ property.property_type }}</span><h1 class="h2 fw-bold">{{ property.title }}</h1>
+<p class="mb-1"><i class="bi bi-geo-alt me-1"></i>{{ property.location }}</p>
+<div class="h4 fw-bold mb-0">₹{{ '{:,.0f}'.format(property.price|float) }} · {{ property.listing_type|title }}</div>
+</section>
+<div class="row g-4">
+<div class="col-lg-8"><div class="panel">
+{% set imgs=(property.image or '').split(',') %}
+{% if imgs and imgs[0].strip() %}
+<img class="img-fluid rounded-3 mb-3 w-100" style="max-height:420px;object-fit:cover" src="{{ imgs[0].strip() if imgs[0].strip().startswith('http') else url_for('static',filename=imgs[0].strip().replace('static/','').replace('/static/','').lstrip('/')) }}" alt="Property image">
+{% endif %}
+<h2 class="h5 fw-bold">Property Description</h2><p>{{ property.description or 'No description provided.' }}</p>
+<div class="row g-3">
+<div class="col-sm-6"><div class="bg-light rounded p-3"><small class="muted">Area</small><div class="fw-bold">{{ property.area }} sq. ft.</div></div></div>
+<div class="col-sm-6"><div class="bg-light rounded p-3"><small class="muted">Status</small><div class="fw-bold">{{ property.status }}</div></div></div>
+</div>
+<div class="mt-3"><h3 class="h6">Location</h3><a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query={{ property.location|urlencode }}">Open in Google Maps</a></div>
+</div></div>
+<div class="col-lg-4"><div class="panel">
+<h2 class="h5 fw-bold">Interested?</h2>
+{% if session.get('user_role') == 'buyer' %}
+<form method="POST" action="{{ url_for('add_wishlist',property_id=property.id) }}"><button class="btn btn-outline-primary w-100 mb-2"><i class="bi bi-heart me-1"></i>Add to Wishlist</button></form>
+<a class="btn btn-primary w-100 mb-2" href="{{ url_for('inquiry',property_id=property.id) }}">Send Inquiry</a>
+{% if property.listing_type|lower == 'rent' %}
+{% set default_request = 'rent' %}
+{% else %}
+{% set default_request = 'buy' %}
+{% endif %}
+<form method="POST" action="{{ url_for('property_request',property_id=property.id) }}">
+<label class="form-label">Request type</label><select class="form-select mb-2" name="request_type">
+{% if property.listing_type|lower != 'rent' %}<option value="buy">Buy</option>{% endif %}
+{% if property.listing_type|lower == 'rent' %}<option value="rent">Rent</option>{% endif %}
+</select>
+<textarea class="form-control mb-2" name="message" rows="2" placeholder="Optional message"></textarea>
+<button class="btn btn-success w-100">Submit Request</button>
+</form>
+{% elif session.get('user_role') == 'owner' and property.owner_id == session.get('user_id') %}
+<a class="btn btn-primary w-100 mb-2" href="{{ url_for('edit_property',property_id=property.id) }}">Edit Property</a>
+<form method="POST" action="{{ url_for('delete_property',property_id=property.id) }}" onsubmit="return confirm('Delete this property?')"><button class="btn btn-outline-danger w-100">Delete Property</button></form>
+{% elif session.get('user_role') == 'admin' %}
+<a class="btn btn-primary w-100 mb-2" href="{{ url_for('admin_edit_property',property_id=property.id) }}">Edit Property</a>
+{% else %}
+<a class="btn btn-primary w-100" href="{{ url_for('login') }}">Login to enquire</a>
+{% endif %}
+</div></div>
+</div>
+
+{% elif page == 'inquiry' %}
+<section class="hero mb-4"><h1 class="h2 fw-bold">Send Property Inquiry</h1><p class="mb-0">{{ property.title }} · {{ property.location }}</p></section>
+<div class="panel"><form method="POST"><label class="form-label">Your message</label><textarea class="form-control mb-3" name="message" rows="5" required placeholder="I am interested in this property..."></textarea><button class="btn btn-primary">Send Inquiry</button></form></div>
+
+{% elif page in ['my_properties','admin_properties'] %}
+<section class="hero mb-4"><h1 class="h2 fw-bold">{{ 'All Properties' if page == 'admin_properties' else 'My Properties' }}</h1><p class="mb-0">Manage property listings.</p></section>
+{% if page == 'my_properties' %}<a class="btn btn-primary mb-3" href="{{ url_for('add_property') }}">Add Property</a>{% endif %}
+<div class="panel table-responsive"><table class="table align-middle">
+<thead><tr><th>Property</th><th>Type</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+{% for p in properties %}
+<tr><td><strong>{{ p.title }}</strong><div class="small muted">{{ p.location }}</div></td>
+<td>{{ p.property_type }} / {{ p.listing_type }}</td><td>₹{{ '{:,.0f}'.format(p.price|float) }}</td>
+<td><span class="badge text-bg-light">{{ p.status }}</span></td><td><div class="d-flex flex-wrap gap-1">
+<a class="btn btn-sm btn-outline-primary" href="{{ url_for('property_details',property_id=p.id) }}">View</a>
+{% if page == 'my_properties' %}<a class="btn btn-sm btn-outline-secondary" href="{{ url_for('edit_property',property_id=p.id) }}">Edit</a>{% endif %}
+{% if page == 'admin_properties' %}
+{% if p.status|lower in ['pending','rejected'] %}
+<form method="POST" action="{{ url_for('approve_property',property_id=p.id) }}"><button class="btn btn-sm btn-success">Approve</button></form>
+{% endif %}
+<form method="POST" action="{{ url_for('reject_property',property_id=p.id) }}"><button class="btn btn-sm btn-warning">Reject</button></form>
+{% endif %}
+<form method="POST" action="{{ url_for('delete_property',property_id=p.id) }}" onsubmit="return confirm('Delete this property?')"><button class="btn btn-sm btn-outline-danger">Delete</button></form>
+</div></td></tr>
+{% else %}<tr><td colspan="5" class="text-center muted py-4">No properties available.</td></tr>{% endfor %}
+</tbody></table></div>
+
+{% elif page == 'wishlist' %}
+<section class="hero mb-4"><h1 class="h2 fw-bold">My Wishlist</h1></section>
+<div class="row g-3">
+{% for p in wishlist_properties %}
+<div class="col-md-6 col-lg-4"><div class="panel"><h3 class="h5 fw-bold">{{ p.title }}</h3><p class="muted">{{ p.location }}</p>
+<div class="price mb-3">₹{{ '{:,.0f}'.format(p.price|float) }}</div>
+<a class="btn btn-primary" href="{{ url_for('property_details',property_id=p.property_id) }}">View</a>
+<form class="d-inline" method="POST" action="{{ url_for('remove_wishlist',property_id=p.property_id) }}"><button class="btn btn-outline-danger">Remove</button></form>
+</div></div>
+{% else %}<div class="col-12"><div class="panel">Your wishlist is empty.</div></div>{% endfor %}
+</div>
+
+{% elif page in ['my_inquiries','owner_inquiries','admin_inquiries'] %}
+<section class="hero mb-4"><h1 class="h2 fw-bold">{{ 'All Inquiries' if page == 'admin_inquiries' else ('Owner Inquiries' if page == 'owner_inquiries' else 'My Inquiries') }}</h1></section>
+<div class="panel table-responsive"><table class="table align-middle">
+<thead><tr><th>Property</th><th>Message</th><th>User</th><th>Status</th><th>Created</th></tr></thead><tbody>
+{% for i in inquiries %}
+<tr><td>{{ i.property_title }}</td><td>{{ i.message }}</td>
+<td>{{ i.user_name|default('') }}<div class="small muted">{{ i.user_email|default('') }}</div></td><td>
+{% if page in ['owner_inquiries','admin_inquiries'] %}
+<form method="POST" action="{{ url_for('update_inquiry_status',inquiry_id=i.id) if page == 'owner_inquiries' else url_for('admin_update_inquiry_status',inquiry_id=i.id) }}" class="d-flex gap-1">
+<select name="status" class="form-select form-select-sm">
+<option value="pending" {% if i.status == 'pending' %}selected{% endif %}>Pending</option>
+<option value="contacted" {% if i.status == 'contacted' %}selected{% endif %}>Contacted</option>
+<option value="closed" {% if i.status == 'closed' %}selected{% endif %}>Closed</option>
+</select><button type="submit" class="btn btn-sm btn-primary">Save</button>
+</form>
+{% else %}{{ i.status }}{% endif %}
+</td><td class="small">{{ i.created_at|default('') }}</td></tr>
+{% else %}<tr><td colspan="5" class="muted text-center">No inquiries found.</td></tr>{% endfor %}
+</tbody></table></div>
+
+{% elif page in ['my_requests','owner_requests'] %}
+<section class="hero mb-4"><h1 class="h2 fw-bold">{{ 'Requests Received' if page == 'owner_requests' else 'My Requests' }}</h1></section>
+<div class="panel table-responsive"><table class="table align-middle">
+<thead><tr><th>Property</th><th>Request</th><th>Message</th><th>Customer</th><th>Status / Action</th></tr></thead><tbody>
+{% for r in requests %}
+<tr><td>{{ r.property_title }}<div class="small muted">{{ r.location }}</div></td><td>{{ r.request_type }}</td><td>{{ r.message }}</td>
+<td>{{ r.user_name|default('') }}<div class="small muted">{{ r.user_email|default('') }}</div></td><td>
+{% if page == 'owner_requests' and r.status == 'pending' %}
+<form method="POST" action="{{ url_for('update_property_request_status',request_id=r.id) }}" class="d-flex gap-1"><button class="btn btn-sm btn-success" name="status" value="approved">Approve</button><button class="btn btn-sm btn-outline-danger" name="status" value="rejected">Reject</button></form>
+{% elif page == 'owner_requests' and r.status == 'approved' %}
+<form method="POST" action="{{ url_for('update_property_request_status',request_id=r.id) }}"><button class="btn btn-sm btn-success" name="status" value="completed">Mark Completed</button></form>
+{% else %}{{ r.status }}{% endif %}
+</td></tr>
+{% else %}<tr><td colspan="5" class="muted text-center">No requests found.</td></tr>{% endfor %}
+</tbody></table></div>
+
+{% elif page == 'admin_users' %}
+<section class="hero mb-4"><h1 class="h2 fw-bold">Manage Users</h1></section>
+<div class="panel table-responsive"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Action</th></tr></thead><tbody>
+{% for u in users %}
+<tr><td>{{ u.name }}</td><td>{{ u.email }}</td><td>{{ u.role }}</td><td>{{ u.created_at|default('') }}</td><td>
+{% if u.role|lower != 'admin' %}<form method="POST" action="{{ url_for('admin_delete_user',user_id=u.id) }}" onsubmit="return confirm('Delete this user?')"><button class="btn btn-sm btn-outline-danger">Delete</button></form>{% endif %}
+</td></tr>
+{% else %}<tr><td colspan="5">No users found.</td></tr>{% endfor %}
+</tbody></table></div>
+
+{% elif page == 'admin_categories' %}
+<section class="hero mb-4"><h1 class="h2 fw-bold">Property Categories</h1></section>
+<div class="panel">
+<form method="POST" class="row g-2 mb-4"><div class="col"><input class="form-control" name="name" required placeholder="New category name"></div><div class="col-auto"><button class="btn btn-primary">Add Category</button></div></form>
+<div class="table-responsive"><table class="table"><thead><tr><th>Category</th><th>Created</th><th>Action</th></tr></thead><tbody>
+{% for c in rows %}
+<tr><td>{{ c.name }}</td><td>{{ c.created_at|default('') }}</td><td><form method="POST" action="{{ url_for('admin_delete_category',cat_id=c.id) }}"><button class="btn btn-sm btn-outline-danger">Delete</button></form></td></tr>
+{% else %}<tr><td colspan="3">No categories available.</td></tr>{% endfor %}
+</tbody></table></div></div>
+
+{% elif page == 'admin_reports' %}
+<section class="hero mb-4"><h1 class="h2 fw-bold">Reports</h1><p class="mb-0">Summary of EstateSphere activity</p></section>
+<div class="row g-3">
+{% for key, rows in [('Users by Role',users_by_role),('Properties by Status',props_by_status),('Properties by Listing Type',props_by_listing),('Properties by Type',props_by_type),('Requests by Status',reqs_by_status),('Inquiries by Status',inq_by_status)] %}
+<div class="col-md-6"><div class="panel"><h2 class="h5 fw-bold">{{ key }}</h2><ul class="mb-0">
+{% for r in rows %}<li>{{ r[0] }}: {{ r[1] }}</li>{% else %}<li>No data</li>{% endfor %}
+</ul></div></div>
+{% endfor %}
+<div class="col-12"><div class="panel"><h2 class="h5 fw-bold">Top Wishlisted Properties</h2><ol>
+{% for r in top_wishlisted %}<li>{{ r[0] }} — {{ r[1] }} saves</li>{% else %}<li>No wishlist data</li>{% endfor %}
+</ol></div></div></div>
+
+{% elif page == 'request_result' %}
+<div class="panel text-center py-5"><h1 class="h3">{{ 'Request Submitted' if success else 'Request Not Submitted' }}</h1><p>{{ message }}</p><a class="btn btn-primary" href="{{ url_for('property_details',property_id=property.id) }}">Back to Property</a></div>
+
+{% elif page == 'status_updated' %}
+<div class="panel text-center py-5"><h1 class="h3">Inquiry Status Updated</h1><p>Status: {{ status }}</p><a class="btn btn-primary" href="{{ url_for('owner_inquiries') }}">Back to Inquiries</a></div>
+
+{% else %}
+<div class="panel"><h1 class="h3">EstateSphere</h1><p>This page is not available.</p><a class="btn btn-primary" href="{{ url_for('dashboard') }}">Dashboard</a></div>
+{% endif %}
+</main>
+
+<footer class="text-center muted py-4 small">© EstateSphere · Property Buying, Selling & Rental Portal</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

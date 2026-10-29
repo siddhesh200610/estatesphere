@@ -88,6 +88,7 @@
 
 
                         <!-- Inquiry Form -->
+                        {% if error %}<div class="alert alert-danger py-2">{{ error }}</div>{% endif %}
                         <form method="POST">
 
                             <div class="mb-4">
@@ -161,5 +162,6 @@
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
 </script>
 
+{% include '_flash.html' %}
 </body>
 </html>

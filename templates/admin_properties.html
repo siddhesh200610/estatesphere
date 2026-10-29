@@ -1,118 +1,628 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Manage Properties - EstateSphere</title>
+    <title>Manage Properties | EstateSphere</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
+        :root {
+            --navy: #0b1730;
+            --navy-light: #142746;
+            --blue: #2563eb;
+            --page: #f1f5fb;
+            --text: #182943;
+        }
+
+        * { box-sizing: border-box; }
+
         body {
-            background-color: #f8f9fa;
+            margin: 0;
+            background: var(--page);
+            color: var(--text);
+            font-family: "Segoe UI", Arial, sans-serif;
         }
 
-        .navbar-brand {
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-
-        .page-header {
-            background: linear-gradient(135deg, #212529, #343a40);
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 245px;
+            padding: 28px 16px;
+            background: linear-gradient(180deg, #0b1730, #10213e);
             color: white;
-            border-radius: 16px;
-            padding: 28px;
-            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
         }
 
-        .property-card {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
+        .brand {
+            padding: 0 10px 35px;
+            font-size: 24px;
+            font-weight: 750;
+            letter-spacing: .3px;
         }
 
-        .table th {
+        .brand i {
+            color: #60a5fa;
+            font-size: 29px;
+            margin-right: 8px;
+        }
+
+        .brand small {
+            display: block;
+            margin: 5px 0 0 39px;
+            font-size: 11px;
+            font-weight: 400;
+            color: #a9bbd5;
+        }
+
+        .nav-link-custom {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 13px 14px;
+            margin-bottom: 7px;
+            color: #d5deed;
+            text-decoration: none;
+            border-radius: 10px;
+            transition: .2s;
+        }
+
+        .nav-link-custom i { font-size: 19px; }
+
+        .nav-link-custom:hover,
+        .nav-link-custom.active {
+            color: white;
+            background: linear-gradient(100deg, #2874f0, #2149b9);
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            padding: 15px 10px 0;
+            border-top: 1px solid #34435e;
+            color: #cbd5e1;
+            font-size: 13px;
+        }
+
+        .main {
+            margin-left: 245px;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            min-height: 72px;
+            padding: 12px 30px;
+            background: white;
+            border-bottom: 1px solid #e0e7f1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .search-top {
+            max-width: 460px;
+            width: 100%;
+            position: relative;
+        }
+
+        .search-top i {
+            position: absolute;
+            top: 11px;
+            left: 13px;
+            color: #71829d;
+        }
+
+        .search-top input {
+            width: 100%;
+            padding: 10px 12px 10px 38px;
+            border: 1px solid #dce5f1;
+            border-radius: 9px;
+            outline: none;
+        }
+
+        .admin-label {
+            font-weight: 600;
             white-space: nowrap;
         }
 
-        .table td {
-            vertical-align: middle;
+        .content { padding: 27px; }
+
+        .hero {
+            min-height: 155px;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            color: white;
+            border-radius: 16px;
+            background:
+                linear-gradient(90deg, rgba(9, 23, 48, .97), rgba(15, 40, 74, .78)),
+                url("https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1500&q=80")
+                center/cover;
+            box-shadow: 0 8px 22px rgba(19, 40, 75, .12);
         }
 
-        .property-title {
+        .hero-icon {
+            display: inline-flex;
+            width: 53px;
+            height: 53px;
+            align-items: center;
+            justify-content: center;
+            background: #2874f0;
+            border-radius: 13px;
+            font-size: 27px;
+            margin-right: 14px;
+            flex-shrink: 0;
+        }
+
+        .hero h1 {
+            font-size: clamp(23px, 2.3vw, 32px);
+            font-weight: 750;
+            margin: 0 0 8px;
+        }
+
+        .hero p {
+            margin: 0;
+            color: #d6e4f8;
+            font-size: 14px;
+        }
+
+        .hero-title {
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-primary-custom {
+            background: var(--blue);
+            color: white;
+            border: none;
+            border-radius: 9px;
+            padding: 11px 16px;
+            text-decoration: none;
+            white-space: nowrap;
             font-weight: 600;
         }
 
+        .btn-primary-custom:hover {
+            background: #1d4ed8;
+            color: white;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin: 22px 0;
+        }
+
+        .stat-card {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 20px;
+            background: white;
+            border: 1px solid #e4ebf5;
+            border-radius: 13px;
+            box-shadow: 0 4px 12px rgba(26, 48, 83, .04);
+        }
+
+        .stat-icon {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 23px;
+        }
+
+        .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+        .stat-icon.green { background: #dcfce7; color: #16a34a; }
+        .stat-icon.orange { background: #fef3c7; color: #d97706; }
+        .stat-icon.red { background: #fee2e2; color: #dc2626; }
+
+        .stat-number {
+            font-size: 25px;
+            line-height: 1.2;
+            font-weight: 750;
+        }
+
+        .stat-label {
+            margin-top: 4px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .panel {
+            overflow: hidden;
+            background: white;
+            border: 1px solid #e1e8f2;
+            border-radius: 15px;
+            box-shadow: 0 5px 18px rgba(26, 48, 83, .05);
+        }
+
+        .panel-heading {
+            padding: 21px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #e7edf5;
+        }
+
+        .panel-heading h2 {
+            font-size: 19px;
+            font-weight: 750;
+            margin: 0;
+        }
+
+        .panel-heading p {
+            color: #718096;
+            font-size: 13px;
+            margin: 5px 0 0;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            padding: 16px 20px;
+            background: #f9fbfe;
+            border-bottom: 1px solid #e7edf5;
+        }
+
+        .filter-bar input,
+        .filter-bar select {
+            min-width: 0;
+            padding: 10px 12px;
+            border: 1px solid #dce5f0;
+            border-radius: 8px;
+            background: white;
+            outline: none;
+        }
+
+        .filter-bar input { flex: 1; }
+
+        .table-responsive { padding: 0 14px; }
+
+        .property-table {
+            margin: 0;
+            min-width: 1050px;
+            vertical-align: middle;
+        }
+
+        .property-table thead th {
+            padding: 15px 12px;
+            background: var(--navy);
+            color: white;
+            border: none;
+            font-size: 12px;
+            font-weight: 650;
+            white-space: nowrap;
+        }
+
+        .property-table thead th:first-child { border-radius: 8px 0 0 8px; }
+        .property-table thead th:last-child { border-radius: 0 8px 8px 0; }
+
+        .property-table tbody td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #e8edf5;
+            font-size: 13px;
+        }
+
+        .property-table tbody tr:hover { background: #f8fbff; }
+
+        .property-title {
+            font-weight: 700;
+            color: #172b49;
+            min-width: 145px;
+        }
+
+        .property-description {
+            display: block;
+            margin-top: 4px;
+            color: #718096;
+            font-size: 11px;
+            max-width: 190px;
+        }
+
+        .price {
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .status-approved,
+        .status-available,
+        .status-active {
+            color: #15803d;
+            background: #dcfce7;
+        }
+
+        .status-pending { color: #a16207; background: #fef3c7; }
+        .status-rejected { color: #b91c1c; background: #fee2e2; }
+
+        .status-sold,
+        .status-rented {
+            color: #475569;
+            background: #e2e8f0;
+        }
+
+        .actions {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            min-width: 180px;
+            align-items: center;
+        }
+
+        .action-btn {
+            display: inline-block;
+            border: 0;
+            border-radius: 7px;
+            padding: 7px 9px;
+            color: white;
+            font-size: 11px;
+            font-weight: 650;
+            text-decoration: none;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .edit-btn { background: #2874f0; }
+        .approve-btn { background: #16a34a; }
+        .reject-btn { background: #e5484d; }
+        .delete-btn { background: #dc2626; }
+
+        .action-btn:hover {
+            filter: brightness(.91);
+            color: white;
+        }
+
         .empty-state {
-            padding: 60px 20px;
+            padding: 55px 20px;
             text-align: center;
+            color: #64748b;
+        }
+
+        .empty-state i {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 38px;
+            color: #94a3b8;
+        }
+
+        .panel-footer {
+            padding: 16px 22px;
+            color: #64748b;
+            font-size: 12px;
+            background: #fbfcfe;
+        }
+
+        @media (max-width: 1100px) {
+            .sidebar { width: 205px; }
+            .main { margin-left: 205px; }
+            .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .content { padding: 18px; }
+        }
+
+        @media (max-width: 700px) {
+            .sidebar {
+                position: static;
+                width: 100%;
+                padding: 15px;
+            }
+
+            .brand { padding-bottom: 15px; }
+
+            .sidebar nav {
+                display: flex;
+                flex-wrap: wrap;
+            }
+
+            .nav-link-custom {
+                padding: 9px;
+                margin: 2px;
+                font-size: 12px;
+            }
+
+            .sidebar-bottom { display: none; }
+            .main { margin-left: 0; }
+
+            .topbar {
+                height: auto;
+                padding: 15px;
+            }
+
+            .hero {
+                padding: 20px;
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .stats { gap: 10px; }
+
+            .stat-card {
+                padding: 13px;
+                gap: 8px;
+            }
+
+            .stat-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 18px;
+            }
+
+            .stat-number { font-size: 21px; }
+
+            .filter-bar { flex-wrap: wrap; }
+
+            .filter-bar input,
+            .filter-bar select {
+                width: 100%;
+                flex: auto;
+            }
         }
     </style>
 </head>
 
 <body>
 
-<nav class="navbar navbar-expand-lg bg-white shadow-sm sticky-top">
-    <div class="container">
+<aside class="sidebar">
+    <div class="brand">
+        <i class="bi bi-houses-fill"></i> EstateSphere
+        <small>Dream. Find. Own.</small>
+    </div>
 
-        <a class="navbar-brand text-dark" href="{{ url_for('admin_dashboard') }}">
-            <i class="bi bi-buildings"></i>
-            EstateSphere
+    <nav>
+        <a href="{{ url_for('admin_dashboard') }}" class="nav-link-custom">
+            <i class="bi bi-grid-1x2-fill"></i> Dashboard
         </a>
 
-        <div class="ms-auto d-flex align-items-center gap-3">
+        <a href="{{ url_for('admin_properties') }}" class="nav-link-custom active">
+            <i class="bi bi-buildings-fill"></i> Manage Properties
+        </a>
 
-            <a href="{{ url_for('admin_dashboard') }}"
-               class="btn btn-outline-dark btn-sm">
-                <i class="bi bi-speedometer2"></i>
-                Dashboard
-            </a>
+        <a href="{{ url_for('admin_users') }}" class="nav-link-custom">
+            <i class="bi bi-people-fill"></i> Manage Users
+        </a>
 
-            <a href="{{ url_for('admin_users') }}"
-               class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-people"></i>
-                Users
-            </a>
+        <a href="{{ url_for('admin_inquiries') }}" class="nav-link-custom">
+            <i class="bi bi-chat-left-text-fill"></i> Inquiries
+        </a>
+    </nav>
 
-            <a href="{{ url_for('logout') }}"
-               class="btn btn-danger btn-sm">
-                <i class="bi bi-box-arrow-right"></i>
-                Logout
-            </a>
-
+    <div class="sidebar-bottom">
+        <div class="mb-3">
+            <i class="bi bi-person-circle me-2"></i>
+            {{ session.get('user_name', 'Admin') }}
         </div>
+        <a href="{{ url_for('logout') }}" class="nav-link-custom">
+            <i class="bi bi-box-arrow-left"></i> Logout
+        </a>
     </div>
-</nav>
+</aside>
 
+<main class="main">
+    <header class="topbar">
+        <div class="search-top">
+            <i class="bi bi-search"></i>
+            <input type="text" id="globalSearch"
+                   placeholder="Search properties, owners, locations...">
+        </div>
 
-<div class="container py-5">
+        <div class="admin-label">
+            <i class="bi bi-shield-lock-fill text-primary me-2"></i>
+            Admin
+        </div>
+    </header>
 
-    <div class="page-header">
-        <h2 class="mb-2">
-            <i class="bi bi-house-door"></i>
-            Manage Properties
-        </h2>
+    <section class="content">
+        <div class="hero">
+            <div class="hero-title">
+                <span class="hero-icon"><i class="bi bi-house-door-fill"></i></span>
+                <div>
+                    <h1>Manage Properties</h1>
+                    <p>View, approve, reject and delete properties listed on EstateSphere.</p>
+                </div>
+            </div>
 
-        <p class="mb-0 text-white-50">
-            View and monitor all properties listed on EstateSphere.
-        </p>
-    </div>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn-primary-custom">
+                <i class="bi bi-speedometer2 me-1"></i> Dashboard
+            </a>
+        </div>
 
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="bi bi-buildings-fill"></i></div>
+                <div>
+                    <div class="stat-number">{{ properties|length }}</div>
+                    <div class="stat-label">Total Properties</div>
+                </div>
+            </div>
 
-    <div class="card property-card">
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="bi bi-check-circle-fill"></i></div>
+                <div>
+                    <div class="stat-number">
+                        {{ properties|selectattr('status', 'in', ['available', 'approved', 'Available', 'Approved'])|list|length }}
+                    </div>
+                    <div class="stat-label">Available</div>
+                </div>
+            </div>
 
-        <div class="card-body p-0">
+            <div class="stat-card">
+                <div class="stat-icon orange"><i class="bi bi-clock-fill"></i></div>
+                <div>
+                    <div class="stat-number">
+                        {{ properties|selectattr('status', 'equalto', 'pending')|list|length }}
+                    </div>
+                    <div class="stat-label">Pending</div>
+                </div>
+            </div>
 
-            {% if properties %}
+            <div class="stat-card">
+                <div class="stat-icon red"><i class="bi bi-x-circle-fill"></i></div>
+                <div>
+                    <div class="stat-number">
+                        {{ properties|selectattr('status', 'equalto', 'rejected')|list|length }}
+                    </div>
+                    <div class="stat-label">Rejected</div>
+                </div>
+            </div>
+        </div>
+
+        <section class="panel">
+            <div class="panel-heading">
+                <div>
+                    <h2><i class="bi bi-list-ul text-primary me-2"></i>Property Listings</h2>
+                    <p>Manage all property records from one place.</p>
+                </div>
+                <span class="badge text-bg-primary rounded-pill px-3 py-2">
+                    {{ properties|length }} Listings
+                </span>
+            </div>
+
+            <div class="filter-bar">
+                <input type="text" id="propertySearch"
+                       placeholder="Search by property, owner or location...">
+
+                <select id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="available">Available</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="sold">Sold</option>
+                    <option value="rented">Rented</option>
+                </select>
+
+                <button type="button" class="btn btn-outline-secondary"
+                        onclick="clearFilters()">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                </button>
+            </div>
 
             <div class="table-responsive">
-
-                <table class="table table-hover mb-0">
-
-                    <thead class="table-dark">
+                <table class="table property-table" id="propertiesTable">
+                    <thead>
                         <tr>
                             <th>ID</th>
                             <th>Property</th>
@@ -123,140 +633,158 @@
                             <th>Area</th>
                             <th>Location</th>
                             <th>Status</th>
-                            <th>Action</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
 
                     <tbody>
-
                     {% for property in properties %}
-
                         <tr>
+                            <td>#{{ property.id }}</td>
 
                             <td>
-                                <strong>#{{ property.id }}</strong>
-                            </td>
-
-                            <td>
-                                <div class="property-title">
-                                    {{ property.title }}
-                                </div>
-
-                                {% if property.description %}
-                                <small class="text-muted">
-                                    {{ property.description[:60] }}
-                                    {% if property.description|length > 60 %}...{% endif %}
-                                </small>
-                                {% endif %}
-                            </td>
-
-                            <td>
-                                <strong>{{ property.owner_name }}</strong>
-                                <br>
-                                <small class="text-muted">
-                                    {{ property.owner_email }}
-                                </small>
-                            </td>
-
-                            <td>
-                                {{ property.property_type }}
-                            </td>
-
-                            <td>
-
-                                {% if property.listing_type == 'buy' %}
-                                    <span class="badge bg-primary">
-                                        For Buy
-                                    </span>
-
-                                {% elif property.listing_type == 'rent' %}
-                                    <span class="badge bg-warning text-dark">
-                                        For Rent
-                                    </span>
-
-                                {% else %}
-                                    <span class="badge bg-success">
-                                        For Sale
-                                    </span>
-                                {% endif %}
-
-                            </td>
-
-                            <td>
-                                ₹{{ "{:,.0f}".format(property.price) }}
-                            </td>
-
-                            <td>
-                                {{ property.area }} sq ft
-                            </td>
-
-                            <td>
-                                <i class="bi bi-geo-alt"></i>
-                                {{ property.location }}
-                            </td>
-
-                            <td>
-                                {% set s = property.status|lower %}
-                                <span class="badge bg-{{ 'success' if s in ['approved','available'] else 'warning text-dark' if s == 'pending' else 'danger' if s in ['rejected','sold'] else 'secondary' }}">
-                                    {{ property.status|capitalize }}
+                                <div class="property-title">{{ property.title }}</div>
+                                <span class="property-description">
+                                    {{ property.description or 'No description available' }}
                                 </span>
                             </td>
 
                             <td>
-                                {% if property.status|lower != 'approved' %}
-                                <form method="POST" action="/admin/property/{{ property.id }}/approve" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
-                                </form>
-                                {% endif %}
-                                {% if property.status|lower != 'rejected' %}
-                                <form method="POST" action="/admin/property/{{ property.id }}/reject" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
-                                </form>
-                                {% endif %}
+                                <strong>{{ property.owner_name or 'N/A' }}</strong>
+                                <div class="text-secondary small">
+                                    {{ property.owner_email or '' }}
+                                </div>
                             </td>
 
+                            <td>{{ property.property_type or 'N/A' }}</td>
+                            <td>{{ property.listing_type or 'N/A' }}</td>
+
+                            <td class="price">
+                                ₹{{ "{:,.0f}".format(property.price|float) if property.price else '0' }}
+                            </td>
+
+                            <td>{{ property.area or 'N/A' }}</td>
+
+                            <td>
+                                <i class="bi bi-geo-alt-fill text-primary me-1"></i>
+                                {{ property.location or 'N/A' }}
+                            </td>
+
+                            <td>
+                                {% set status = (property.status or 'pending')|lower %}
+                                <span class="status status-{{ status }}">
+                                    {{ status|title }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <div class="actions">
+
+                                    {# Admin may edit only properties owned by their account. #}
+                                    {% if property.owner_id is defined and property.owner_id|string == session.get('user_id')|string %}
+                                    <a href="{{ url_for('admin_edit_property', property_id=property.id) }}"
+                                       class="action-btn edit-btn"
+                                       title="Edit your property">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </a>
+                                    {% endif %}
+
+                                    {% if (property.status or 'pending')|lower in ['pending', 'rejected'] %}
+                                    <form method="POST"
+                                          action="{{ url_for('approve_property', id=property.id) }}"
+                                          class="d-inline">
+                                        <button type="submit" class="action-btn approve-btn">
+                                            <i class="bi bi-check-lg"></i> Approve
+                                        </button>
+                                    </form>
+                                    {% endif %}
+
+                                    {% if (property.status or 'pending')|lower in ['pending', 'approved', 'available'] %}
+                                    <form method="POST"
+                                          action="{{ url_for('reject_property', id=property.id) }}"
+                                          class="d-inline">
+                                        <button type="submit" class="action-btn reject-btn">
+                                            <i class="bi bi-x-lg"></i> Reject
+                                        </button>
+                                    </form>
+                                    {% endif %}
+
+                                    {# Admin can delete any property, regardless of owner. #}
+                                    <form method="POST"
+                                          action="{{ url_for('admin_delete_property', property_id=property.id) }}"
+                                          class="d-inline"
+                                          onsubmit="return confirm('Are you sure you want to permanently delete this property? Related wishlist entries, inquiries and requests will also be deleted. This action cannot be undone.');">
+                                        <button type="submit" class="action-btn delete-btn">
+                                            <i class="bi bi-trash3-fill"></i> Delete
+                                        </button>
+                                    </form>
+
+                                </div>
+                            </td>
                         </tr>
-
+                    {% else %}
+                        <tr>
+                            <td colspan="10">
+                                <div class="empty-state">
+                                    <i class="bi bi-houses"></i>
+                                    <h5>No properties found</h5>
+                                    <p class="mb-0">Property listings will appear here when available.</p>
+                                </div>
+                            </td>
+                        </tr>
                     {% endfor %}
-
                     </tbody>
-
                 </table>
-
             </div>
 
-            {% else %}
+            <div class="panel-footer">
+                <i class="bi bi-info-circle me-1"></i>
+                Showing <strong>{{ properties|length }}</strong> properties.
+                Use the search and status filter to find a listing.
+            </div>
+        </section>
+    </section>
+</main>
 
-                <div class="empty-state">
+<script>
+    const propertySearch = document.getElementById("propertySearch");
+    const globalSearch = document.getElementById("globalSearch");
+    const statusFilter = document.getElementById("statusFilter");
 
-                    <i class="bi bi-house-x display-1 text-muted"></i>
+    function filterProperties() {
+        const search = propertySearch.value.toLowerCase().trim();
+        const global = globalSearch.value.toLowerCase().trim();
+        const status = statusFilter.value.toLowerCase();
 
-                    <h4 class="mt-3">
-                        No Properties Found
-                    </h4>
+        document.querySelectorAll("#propertiesTable tbody tr").forEach(row => {
+            const text = row.innerText.toLowerCase();
+            const matchesSearch = text.includes(search) && text.includes(global);
 
-                    <p class="text-muted">
-                        There are currently no properties listed on EstateSphere.
-                    </p>
+            const statusCell = row.cells[8];
+            const rowStatus = statusCell
+                ? statusCell.innerText.toLowerCase().trim()
+                : "";
 
-                </div>
+            const matchesStatus = !status ||
+                rowStatus === status ||
+                (status === "approved" && rowStatus === "available");
 
-            {% endif %}
+            row.style.display = matchesSearch && matchesStatus ? "" : "none";
+        });
+    }
 
-        </div>
-    </div>
+    propertySearch.addEventListener("input", filterProperties);
+    globalSearch.addEventListener("input", filterProperties);
+    statusFilter.addEventListener("change", filterProperties);
 
-</div>
+    function clearFilters() {
+        propertySearch.value = "";
+        globalSearch.value = "";
+        statusFilter.value = "";
+        filterProperties();
+    }
+</script>
 
-
-<footer class="text-center text-muted py-4">
-    <small>
-        © 2026 EstateSphere. All Rights Reserved.
-    </small>
-</footer>
-
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+{% include '_flash.html' %}
 </body>
 </html>

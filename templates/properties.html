@@ -55,17 +55,19 @@
                     <span class="hidden sm:inline">Home</span>
                 </a>
 
-                {% if session.get("user_id") %}
+                {% if session.get("user_role") == "buyer" %}
                 <a href="{{ url_for('wishlist') }}" class="px-3.5 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 rounded-lg transition duration-200 flex items-center gap-1.5">
                     <i class="bi bi-heart-fill"></i>
                     <span class="hidden sm:inline">Wishlist</span>
                 </a>
                 {% endif %}
 
+                {% if session.get("user_role") == "owner" %}
                 <a href="/add-property" class="px-4 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-lg shadow-sm hover:shadow transition duration-200 flex items-center gap-1.5">
                     <i class="bi bi-plus-circle"></i>
                     <span>Add Property</span>
                 </a>
+                {% endif %}
             </div>
         </div>
     </header>
@@ -351,6 +353,7 @@
         </div>
     </footer>
 
+{% include '_flash.html' %}
 </body>
 
 </html>

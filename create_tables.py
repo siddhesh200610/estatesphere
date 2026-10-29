@@ -28,7 +28,7 @@ with app.app_context():
             area DECIMAL(10, 2) NOT NULL,
             location VARCHAR(255) NOT NULL,
             description TEXT,
-            image VARCHAR(500),
+            image TEXT,
             status VARCHAR(50) DEFAULT 'pending',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
@@ -86,4 +86,18 @@ with app.app_context():
     """))
 
     db.session.commit()
+
+    # ---- Upgrade steps for databases created with an older version (safe to run again) ----
+    # 1. Several photos are stored comma separated, VARCHAR(500) is too small for that.
+    try:
+        db.session.execute(text("ALTER TABLE properties MODIFY image TEXT"))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print("Note: could not widen properties.image:", e)
+
+    # 2. "For Sale" used to be saved as 'sell'; it is the same as 'buy'.
+    db.session.execute(text("UPDATE properties SET listing_type = 'buy' WHERE listing_type IN ('sell', 'sale')"))
+    db.session.commit()
+
     print("All tables created successfully in Aiven database!")

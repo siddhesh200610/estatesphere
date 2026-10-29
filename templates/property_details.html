@@ -177,49 +177,77 @@
                 <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
                     <h3 class="text-lg font-bold text-slate-900 mb-4">Property Actions</h3>
                     
+                    {% set role = session.get("user_role") %}
                     {% if session.get("user_id") %}
                         <div class="space-y-3">
-                            <!-- Agar logged-in user property ka Owner hai -->
-                            {% if property.owner_id == session.get("user_id") %}
-                                <div class="p-3 bg-brand-50 border border-brand-100 rounded-xl text-center mb-1">
-                                    <p class="text-xs font-bold text-brand-700">Ye aapki apni property listing hai.</p>
-                                </div>
-                                
-                                <!-- Edit Property Button -->
-                                <a href="{{ url_for('edit_property', property_id=property.id) }}" class="w-full py-2.5 px-4 text-center text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition flex items-center justify-center gap-2">
-                                    <i class="bi bi-pencil-square"></i>
-                                    <span>Edit Property</span>
-                                </a>
 
-                                <!-- Delete Property Button -->
-                                <form action="{{ url_for('delete_property', property_id=property.id) }}" method="POST" onsubmit="return confirm('Kya aap sach mein is property ko delete karna chahte hain?');">
-                                    <button type="submit" class="w-full py-2.5 px-4 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition flex items-center justify-center gap-2">
-                                        <i class="bi bi-trash-fill"></i>
-                                        <span>Delete Property</span>
-                                  </button>
-                                </form>
+                        {% if role == "owner" and property.owner_id == session.get("user_id") %}
+                            <!-- OWNER: own property -> edit / delete -->
+                            <div class="p-3 bg-brand-50 border border-brand-100 rounded-xl text-center mb-1">
+                                <p class="text-xs font-bold text-brand-700">This is your own listing. Status: {{ property.status|title }}</p>
+                            </div>
+                            <a href="{{ url_for('edit_property', property_id=property.id) }}" class="w-full py-2.5 px-4 text-center text-xs font-semibold rounded-xl transition flex items-center justify-center gap-2 text-white bg-brand-600 hover:bg-brand-700">
+                                <i class="bi bi-pencil-square"></i><span>Edit Property</span>
+                            </a>
+                            <form action="{{ url_for('delete_property', property_id=property.id) }}" method="POST" onsubmit="return confirm('Delete this property permanently?');">
+                                <button type="submit" class="w-full py-2.5 px-4 text-center text-xs font-semibold rounded-xl transition flex items-center justify-center gap-2 text-rose-600 bg-rose-50 hover:bg-rose-100">
+                                    <i class="bi bi-trash-fill"></i><span>Delete Property</span>
+                                </button>
+                            </form>
 
-                            {% else %}
-                                <!-- Request to Buy / Rent Modal Trigger Button -->
-                                <button type="button" onclick="openRequestModal()" class="w-full py-2.5 px-4 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-sm transition flex items-center justify-center gap-2">
+                        {% elif role == "admin" %}
+                            <!-- ADMIN: moderate only (no add property) -->
+                            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center mb-1">
+                                <p class="text-xs font-bold text-slate-700">Admin view. Status: {{ property.status|title }}</p>
+                            </div>
+                            {% if property.status in ['pending', 'rejected'] %}
+                            <form action="{{ url_for('approve_property', id=property.id) }}" method="POST">
+                                <button type="submit" class="w-full py-2.5 px-4 text-center text-xs font-semibold rounded-xl transition flex items-center justify-center gap-2 text-white bg-emerald-600 hover:bg-emerald-700"><i class="bi bi-check-lg"></i><span>Approve</span></button>
+                            </form>
+                            {% endif %}
+                            {% if property.status in ['pending', 'approved', 'available', 'Approved', 'Available'] %}
+                            <form action="{{ url_for('reject_property', id=property.id) }}" method="POST">
+                                <button type="submit" class="w-full py-2.5 px-4 text-center text-xs font-semibold rounded-xl transition flex items-center justify-center gap-2 text-amber-700 bg-amber-50 hover:bg-amber-100"><i class="bi bi-x-lg"></i><span>Reject</span></button>
+                            </form>
+                            {% endif %}
+                            <a href="{{ url_for('admin_edit_property', property_id=property.id) }}" class="w-full py-2.5 px-4 text-center text-xs font-semibold rounded-xl transition flex items-center justify-center gap-2 text-white bg-brand-600 hover:bg-brand-700">
+                                <i class="bi bi-pencil-square"></i><span>Edit Property</span>
+                            </a>
+                            <form action="{{ url_for('delete_property', property_id=property.id) }}" method="POST" onsubmit="return confirm('Delete this property permanently?');">
+                                <button type="submit" class="w-full py-2.5 px-4 text-center text-xs font-semibold rounded-xl transition flex items-center justify-center gap-2 text-rose-600 bg-rose-50 hover:bg-rose-100"><i class="bi bi-trash-fill"></i><span>Delete Property</span></button>
+                            </form>
+
+                        {% elif role == "buyer" %}
+                            <!-- BUYER / TENANT -->
+                            {% if is_live %}
+                                <button type="button" onclick="openRequestModal()" class="w-full py-2.5 px-4 text-center text-xs font-semibold rounded-xl transition flex items-center justify-center gap-2 text-white bg-brand-600 hover:bg-brand-700 shadow-sm">
                                     <i class="bi bi-house-check-fill"></i>
-                                    <span>Send Property Request</span>
+                                    <span>{{ 'Send Rent Request' if property.listing_type == 'rent' else 'Send Buy Request' }}</span>
                                 </button>
 
-                                <!-- Wishlist Toggle -->
-                                <form action="{{ url_for('add_wishlist', property_id=property.id) }}" method="POST">
-                                    <button type="submit" class="w-full py-2.5 px-4 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition flex items-center justify-center gap-2">
-                                        <i class="bi bi-heart-fill"></i>
-                                        <span>Add to Wishlist</span>
-                                    </button>
+                                {% if in_wishlist %}
+                                <form action="{{ url_for('remove_wishlist', property_id=property.id) }}" method="POST">
+                                    <input type="hidden" name="next" value="property">
+                                    <button type="submit" class="w-full py-2.5 px-4 text-center text-xs font-semibold rounded-xl transition flex items-center justify-center gap-2 text-slate-700 bg-slate-100 hover:bg-slate-200"><i class="bi bi-heartbreak"></i><span>Remove from Wishlist</span></button>
                                 </form>
+                                {% else %}
+                                <form action="{{ url_for('add_wishlist', property_id=property.id) }}" method="POST">
+                                    <button type="submit" class="w-full py-2.5 px-4 text-center text-xs font-semibold rounded-xl transition flex items-center justify-center gap-2 text-rose-600 bg-rose-50 hover:bg-rose-100"><i class="bi bi-heart-fill"></i><span>Add to Wishlist</span></button>
+                                </form>
+                                {% endif %}
 
-                                <!-- Inquiry Option -->
-                                <a href="{{ url_for('inquiry', property_id=property.id) }}" class="w-full py-2.5 px-4 text-center text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition flex items-center justify-center gap-2">
-                                    <i class="bi bi-chat-dots-fill"></i>
-                                    <span>Send Inquiry to Owner</span>
+                                <a href="{{ url_for('inquiry', property_id=property.id) }}" class="w-full py-2.5 px-4 text-center text-xs font-semibold rounded-xl transition flex items-center justify-center gap-2 text-slate-700 bg-slate-100 hover:bg-slate-200">
+                                    <i class="bi bi-chat-dots-fill"></i><span>Send Inquiry to Owner</span>
                                 </a>
+                            {% else %}
+                                <p class="text-xs text-slate-500 text-center">This property is no longer available ({{ property.status|title }}).</p>
                             {% endif %}
+
+                        {% else %}
+                            <!-- OWNER viewing somebody else's listing -->
+                            <p class="text-xs text-slate-500 text-center">Owner accounts can only browse other listings. Use a Buyer / Tenant account to send requests or inquiries.</p>
+                        {% endif %}
+
                         </div>
                     {% else %}
                         <p class="text-xs text-slate-500 mb-4">Please login to send inquiries or save this property to your wishlist.</p>
@@ -248,8 +276,11 @@
             <form action="{{ url_for('property_request', property_id=property.id) }}" method="POST" class="space-y-4">
                 <div>
                     <select name="request_type" class="w-full py-2.5 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:border-brand-500 font-medium">
-                        <option value="buy" {% if property.listing_type == 'sale' or property.listing_type == 'buy' %}selected{% endif %}>Request to Buy</option>
-                        <option value="rent" {% if property.listing_type == 'rent' %}selected{% endif %}>Request to Rent</option>
+                        {% if property.listing_type == 'rent' %}
+                        <option value="rent" selected>Request to Rent</option>
+                        {% else %}
+                        <option value="buy" selected>Request to Buy</option>
+                        {% endif %}
                     </select>
                 </div>
                 <div class="flex gap-3 pt-2">
@@ -287,6 +318,7 @@
         }
     </script>
 
+{% include '_flash.html' %}
 </body>
 
 </html>
